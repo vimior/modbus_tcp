@@ -23,10 +23,10 @@ ModbusData::ModbusData(unsigned int coil_bit_count, unsigned int input_bit_count
 , coil_bit_count_(coil_bit_count), input_bit_count_(input_bit_count)
 , holding_reg_count_(holding_reg_count), input_reg_count_(input_reg_count)
 {
-  coil_bits_ = new modbus_base_data<unsigned char>[coil_bit_count_];
-  input_bits_ = new modbus_base_data<unsigned char>[input_bit_count_];
-  holding_regs_ = new modbus_base_data<unsigned short>[holding_reg_count_];
-  input_regs_ = new modbus_base_data<unsigned short>[input_reg_count_];
+  coil_bits_ = new modbus_struct_data<unsigned char>[coil_bit_count_];
+  input_bits_ = new modbus_struct_data<unsigned char>[input_bit_count_];
+  holding_regs_ = new modbus_struct_data<unsigned short>[holding_reg_count_];
+  input_regs_ = new modbus_struct_data<unsigned short>[input_reg_count_];
 }
 
 ModbusData::~ModbusData()
@@ -184,7 +184,7 @@ int ModbusData::write_and_read_holding_registers(int w_addr, unsigned short *w_r
   return MODBUS_NONE;
 }
 
-modbus_base_data<unsigned char>* ModbusData::get_coil_bit_struct(int addr)
+modbus_struct_data<unsigned char>* ModbusData::get_coil_bit_struct(int addr)
 {
   int inx = addr - coil_bit_start_addr_;
   if (inx < 0 || inx >= coil_bit_count_)
@@ -192,7 +192,7 @@ modbus_base_data<unsigned char>* ModbusData::get_coil_bit_struct(int addr)
   return &coil_bits_[inx];
 }
 
-modbus_base_data<unsigned char>* ModbusData::get_input_bit_struct(int addr)
+modbus_struct_data<unsigned char>* ModbusData::get_input_bit_struct(int addr)
 {
   int inx = addr - input_bit_start_addr_;
   if (inx < 0 || inx >= input_bit_count_)
@@ -200,7 +200,7 @@ modbus_base_data<unsigned char>* ModbusData::get_input_bit_struct(int addr)
   return &input_bits_[inx];
 }
 
-modbus_base_data<unsigned short>* ModbusData::get_holding_register_struct(int addr)
+modbus_struct_data<unsigned short>* ModbusData::get_holding_register_struct(int addr)
 {
   int inx = addr - holding_reg_start_addr_;
   if (inx < 0 || inx >= holding_reg_count_)
@@ -208,7 +208,7 @@ modbus_base_data<unsigned short>* ModbusData::get_holding_register_struct(int ad
   return &holding_regs_[inx];
 }
 
-modbus_base_data<unsigned short>* ModbusData::get_input_register_struct(int addr)
+modbus_struct_data<unsigned short>* ModbusData::get_input_register_struct(int addr)
 {
   int inx = addr - input_reg_start_addr_;
   if (inx < 0 || inx >= input_reg_count_)
@@ -289,25 +289,25 @@ int StaticModbusData::write_and_read_holding_registers(int w_addr, unsigned shor
   return modbus_data_->write_and_read_holding_registers(w_addr, w_regs, w_quantity, r_addr, r_quantity, r_regs);
 }
 
-modbus_base_data<unsigned char>* StaticModbusData::get_coil_bit_struct(int addr)
+modbus_struct_data<unsigned char>* StaticModbusData::get_coil_bit_struct(int addr)
 {
   if (modbus_data_ == NULL) return NULL;
   return modbus_data_->get_coil_bit_struct(addr);
 }
 
-modbus_base_data<unsigned char>* StaticModbusData::get_input_bit_struct(int addr)
+modbus_struct_data<unsigned char>* StaticModbusData::get_input_bit_struct(int addr)
 {
   if (modbus_data_ == NULL) return NULL;
   return modbus_data_->get_input_bit_struct(addr);
 }
 
-modbus_base_data<unsigned short>* StaticModbusData::get_holding_register_struct(int addr)
+modbus_struct_data<unsigned short>* StaticModbusData::get_holding_register_struct(int addr)
 {
   if (modbus_data_ == NULL) return NULL;
   return modbus_data_->get_holding_register_struct(addr);
 }
 
-modbus_base_data<unsigned short>* StaticModbusData::get_input_register_struct(int addr)
+modbus_struct_data<unsigned short>* StaticModbusData::get_input_register_struct(int addr)
 {
   if (modbus_data_ == NULL) return NULL;
   return modbus_data_->get_input_register_struct(addr);

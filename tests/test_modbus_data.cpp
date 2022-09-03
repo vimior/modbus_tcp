@@ -12,6 +12,19 @@ void print_datas(std::string str, T *data, int length)
   printf("\n");
 }
 
+unsigned char get_bit(unsigned char val) {
+  return 11; 
+}
+
+unsigned short get_reg(unsigned short val) {
+  return 99;
+}
+
+int set_reg(unsigned short val) {
+  printf("set_reg: %d\n", val);
+  return 0;
+}
+
 int main(int argc, char *arg[])
 {
   // init modbus data
@@ -32,18 +45,40 @@ int main(int argc, char *arg[])
   StaticModbusData::read_coil_bits(0x00, 8, r_bits);
   print_datas<unsigned char>("[2] bits", r_bits, 8);
 
+  // bind the get function
+  for (int i = 0; i < 8; i++) {
+    StaticModbusData::get_coil_bit_struct(i)->bind_get(get_bit);
+  }
+  // read coil bits
+  StaticModbusData::read_coil_bits(0x00, 8, r_bits);
+  print_datas<unsigned char>("[3] bits", r_bits, 8);
+
+
   unsigned short r_regs[8] = {0};
   unsigned short w_regs[8] = {1, 2, 3, 4, 5, 6, 7, 8};
   // read holding registers
   StaticModbusData::read_holding_registers(0x00, 8, r_regs);
   print_datas<unsigned short>("[1] regs", r_regs, 8);
 
+  // bind the set function
+  for (int i = 0; i < 8; i++) {
+    StaticModbusData::get_holding_register_struct(i)->bind_set(set_reg);
+  }
   // write holding registers
   StaticModbusData::write_holding_registers(0x00, w_regs, 8);
 
   // read holding registers
   StaticModbusData::read_holding_registers(0x00, 8, r_regs);
   print_datas<unsigned short>("[2] regs", r_regs, 8);
+
+  // bind the get function
+  for (int i = 0; i < 8; i++) {
+    StaticModbusData::get_holding_register_struct(i)->bind_get(get_reg);
+  }
+  // read holding registers
+  StaticModbusData::read_holding_registers(0x00, 8, r_regs);
+  print_datas<unsigned short>("[3] regs", r_regs, 8);
+
 
   return 0;
 }
