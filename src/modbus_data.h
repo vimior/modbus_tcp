@@ -245,11 +245,17 @@ enum ModbusDataCode {
   MODBUS_DATA_ILLEGAL_ADDR = 0x03  // 访问的寄存器地址非法
 };
 
+typedef modbus_base_data<unsigned char> modbus_bit_base_data;
+typedef modbus_base_data<unsigned short> modbus_reg_base_data;
+typedef modbus_struct_data<unsigned char> modbus_bit_struct_data;
+typedef modbus_struct_data<unsigned short> modbus_reg_struct_data;
+
 /* Modbus数据寄存器的操作类 */
-class ModbusData
+template <typename BIT_T = modbus_bit_base_data, typename REG_T = modbus_reg_base_data>
+class ModbusDataTemplate
 {
 public:
-  /* ModbusData: 构造数据寄存器
+  /* ModbusDataTemplate: 构造数据寄存器
     @param coil_bit_count: 线圈状态寄存器数量
     @param input_bit_count: 离散输入状态寄存器数量
     @param holding_reg_count: 保持寄存器数量
@@ -259,14 +265,14 @@ public:
     @param holding_reg_start_addr: 保持寄存器起始地址, 默认0x00
     @param input_reg_start_addr: 输入寄存器起始地址, 默认0x00
   */
-  ModbusData(unsigned int coil_bit_count, unsigned int input_bit_count,
+  ModbusDataTemplate(unsigned int coil_bit_count, unsigned int input_bit_count,
     unsigned int holding_reg_count, unsigned int input_reg_count, 
     unsigned int coil_bit_start_addr = 0x00, unsigned int input_bit_start_addr = 0x00,
     unsigned int holding_reg_start_addr = 0x00, unsigned int input_reg_start_addr = 0x00);
   
-  /* ~ModbusData: 销毁数据寄存器
+  /* ~ModbusDataTemplate: 销毁数据寄存器
   */
-  ~ModbusData();
+  ~ModbusDataTemplate();
 
   /********************** READ *********************/
 
@@ -361,25 +367,25 @@ public:
     @param addr: 寄存器地址
     :return: 成功返回寄存器指针，失败返回NULL
   */
-  modbus_struct_data<unsigned char>* get_coil_bit_struct(int addr);
+  BIT_T* get_coil_bit_struct(int addr);
   
   /* get_input_bit_struct: 获取指定地址的离散输入状态寄存器
     @param addr: 寄存器地址
     :return: 成功返回寄存器指针，失败返回NULL
   */
-  modbus_struct_data<unsigned char>* get_input_bit_struct(int addr);
+  BIT_T* get_input_bit_struct(int addr);
   
   /* get_holding_register_struct: 获取指定地址的保持寄存器
     @param addr: 寄存器地址
     :return: 成功返回寄存器指针，失败返回NULL
   */
-  modbus_struct_data<unsigned short>* get_holding_register_struct(int addr);
+  REG_T* get_holding_register_struct(int addr);
   
   /* get_input_register_struct: 获取指定地址的输入寄存器
     @param addr: 寄存器地址
     :return: 成功返回寄存器指针，失败返回NULL
   */
-  modbus_struct_data<unsigned short>* get_input_register_struct(int addr);
+  REG_T* get_input_register_struct(int addr);
 
 private:
   unsigned int coil_bit_start_addr_;    // 线圈状态寄存器起始地址
@@ -390,18 +396,19 @@ private:
   unsigned int input_bit_count_;    // 离散输入状态寄存器数量
   unsigned int holding_reg_count_;  // 保持寄存器数量
   unsigned int input_reg_count_;    // 输入寄存器数量
-  modbus_struct_data<unsigned char> *coil_bits_;      // 线圈状态寄存器数组
-  modbus_struct_data<unsigned char> *input_bits_;     // 离散输入状态寄存器数组
-  modbus_struct_data<unsigned short> *holding_regs_;  // 保持寄存器数组
-  modbus_struct_data<unsigned short> *input_regs_;    // 输入寄存器数组
+  BIT_T *coil_bits_;      // 线圈状态寄存器数组
+  BIT_T *input_bits_;     // 离散输入状态寄存器数组
+  REG_T *holding_regs_;  // 保持寄存器数组
+  REG_T *input_regs_;    // 输入寄存器数组
 };
 
 /* Modbus数据寄存器的静态操作类 */
-class StaticModbusData 
+template <typename BIT_T = modbus_bit_base_data, typename REG_T = modbus_reg_base_data>
+class StaticModbusDataTemplate 
 {
 public:
-  static void set_modbus_data(ModbusData* modbus_data);
-  static ModbusData* get_modbus_data(void);
+  static void set_modbus_data(ModbusDataTemplate<BIT_T, REG_T>* modbus_data);
+  static ModbusDataTemplate<BIT_T, REG_T>* get_modbus_data(void);
 
   static int read_coil_bits(int addr, int quantity, unsigned char *bits);
   static int read_input_bits(int addr, int quantity, unsigned char *bits);
@@ -417,13 +424,18 @@ public:
   static int write_and_read_holding_registers(int w_addr, unsigned short *w_regs, int w_quantity, int r_addr, int r_quantity, unsigned short *r_regs);
 
 
-  static modbus_struct_data<unsigned char>* get_coil_bit_struct(int addr);
-  static modbus_struct_data<unsigned char>* get_input_bit_struct(int addr);
-  static modbus_struct_data<unsigned short>* get_holding_register_struct(int addr);
-  static modbus_struct_data<unsigned short>* get_input_register_struct(int addr);
+  static BIT_T* get_coil_bit_struct(int addr);
+  static BIT_T* get_input_bit_struct(int addr);
+  static REG_T* get_holding_register_struct(int addr);
+  static REG_T* get_input_register_struct(int addr);
 
 private:
-  static ModbusData *modbus_data_;
+  static ModbusDataTemplate<BIT_T, REG_T> *modbus_data_;
 };
+
+typedef ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data> ModbusBaseData;
+typedef StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data> StaticModbusBaseData;
+typedef ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data> ModbusStructData;
+typedef StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data> StaticModbusStructData;
 
 #endif // _MODBUS_DATA_H_

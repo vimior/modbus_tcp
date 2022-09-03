@@ -10,11 +10,13 @@
 #include <cstdlib>
 #include "modbus_data.h"
 
-ModbusData* StaticModbusData::modbus_data_ = NULL;
+template <typename BIT_T, typename REG_T>
+ModbusDataTemplate<BIT_T, REG_T>* StaticModbusDataTemplate<BIT_T, REG_T>::modbus_data_ = NULL;
 
-/**************** ModbusData *****************/
+/**************** ModbusDataTemplate *****************/
 
-ModbusData::ModbusData(unsigned int coil_bit_count, unsigned int input_bit_count,
+template <typename BIT_T, typename REG_T>
+ModbusDataTemplate<BIT_T, REG_T>::ModbusDataTemplate(unsigned int coil_bit_count, unsigned int input_bit_count,
     unsigned int holding_reg_count, unsigned int input_reg_count, 
     unsigned int coil_bit_start_addr, unsigned int input_bit_start_addr,
     unsigned int holding_reg_start_addr, unsigned int input_reg_start_addr)
@@ -23,13 +25,14 @@ ModbusData::ModbusData(unsigned int coil_bit_count, unsigned int input_bit_count
 , coil_bit_count_(coil_bit_count), input_bit_count_(input_bit_count)
 , holding_reg_count_(holding_reg_count), input_reg_count_(input_reg_count)
 {
-  coil_bits_ = new modbus_struct_data<unsigned char>[coil_bit_count_];
-  input_bits_ = new modbus_struct_data<unsigned char>[input_bit_count_];
-  holding_regs_ = new modbus_struct_data<unsigned short>[holding_reg_count_];
-  input_regs_ = new modbus_struct_data<unsigned short>[input_reg_count_];
+  coil_bits_ = new BIT_T[coil_bit_count_];
+  input_bits_ = new BIT_T[input_bit_count_];
+  holding_regs_ = new REG_T[holding_reg_count_];
+  input_regs_ = new REG_T[input_reg_count_];
 }
 
-ModbusData::~ModbusData()
+template <typename BIT_T, typename REG_T>
+ModbusDataTemplate<BIT_T, REG_T>::~ModbusDataTemplate()
 {
   if (coil_bits_ != NULL) {
     delete[] coil_bits_;
@@ -49,7 +52,8 @@ ModbusData::~ModbusData()
   }
 }
 
-int ModbusData::read_coil_bits(int addr, int quantity, unsigned char *bits)
+template <typename BIT_T, typename REG_T>
+int ModbusDataTemplate<BIT_T, REG_T>::read_coil_bits(int addr, int quantity, unsigned char *bits)
 {
   int inx = addr - coil_bit_start_addr_;
   if (inx < 0 || inx + quantity > coil_bit_count_)
@@ -60,7 +64,8 @@ int ModbusData::read_coil_bits(int addr, int quantity, unsigned char *bits)
   return MODBUS_NONE;
 }
 
-int ModbusData::read_input_bits(int addr, int quantity, unsigned char *bits)
+template <typename BIT_T, typename REG_T>
+int ModbusDataTemplate<BIT_T, REG_T>::read_input_bits(int addr, int quantity, unsigned char *bits)
 {
   int inx = addr - input_bit_start_addr_;
   if (inx < 0 || inx + quantity > input_bit_count_)
@@ -71,7 +76,8 @@ int ModbusData::read_input_bits(int addr, int quantity, unsigned char *bits)
   return MODBUS_NONE;
 }
 
-int ModbusData::read_holding_registers(int addr, int quantity, unsigned short *regs)
+template <typename BIT_T, typename REG_T>
+int ModbusDataTemplate<BIT_T, REG_T>::read_holding_registers(int addr, int quantity, unsigned short *regs)
 {
   int inx = addr - holding_reg_start_addr_;
   if (inx < 0 || inx + quantity > holding_reg_count_)
@@ -82,7 +88,8 @@ int ModbusData::read_holding_registers(int addr, int quantity, unsigned short *r
   return MODBUS_NONE;
 }
 
-int ModbusData::read_input_registers(int addr, int quantity, unsigned short *regs)
+template <typename BIT_T, typename REG_T>
+int ModbusDataTemplate<BIT_T, REG_T>::read_input_registers(int addr, int quantity, unsigned short *regs)
 {
   int inx = addr - input_reg_start_addr_;
   if (inx < 0 || inx + quantity > input_reg_count_)
@@ -93,7 +100,8 @@ int ModbusData::read_input_registers(int addr, int quantity, unsigned short *reg
   return MODBUS_NONE;
 }
 
-int ModbusData::write_coil_bits(int addr, unsigned char *bits, int quantity)
+template <typename BIT_T, typename REG_T>
+int ModbusDataTemplate<BIT_T, REG_T>::write_coil_bits(int addr, unsigned char *bits, int quantity)
 {
   int inx = addr - coil_bit_start_addr_;
   if (inx < 0 || inx + quantity > coil_bit_count_)
@@ -108,7 +116,8 @@ int ModbusData::write_coil_bits(int addr, unsigned char *bits, int quantity)
   return MODBUS_NONE;
 }
 
-int ModbusData::write_input_bits(int addr, unsigned char *bits, int quantity)
+template <typename BIT_T, typename REG_T>
+int ModbusDataTemplate<BIT_T, REG_T>::write_input_bits(int addr, unsigned char *bits, int quantity)
 {
   int inx = addr - input_bit_start_addr_;
   if (inx < 0 || inx + quantity > input_bit_count_)
@@ -123,7 +132,8 @@ int ModbusData::write_input_bits(int addr, unsigned char *bits, int quantity)
   return MODBUS_NONE;
 }
 
-int ModbusData::write_holding_registers(int addr, unsigned short *regs, int quantity)
+template <typename BIT_T, typename REG_T>
+int ModbusDataTemplate<BIT_T, REG_T>::write_holding_registers(int addr, unsigned short *regs, int quantity)
 {
   int inx = addr - holding_reg_start_addr_;
   if (inx < 0 || inx + quantity > holding_reg_count_)
@@ -137,7 +147,8 @@ int ModbusData::write_holding_registers(int addr, unsigned short *regs, int quan
   return MODBUS_NONE;
 }
 
-int ModbusData::write_input_registers(int addr, unsigned short *regs, int quantity)
+template <typename BIT_T, typename REG_T>
+int ModbusDataTemplate<BIT_T, REG_T>::write_input_registers(int addr, unsigned short *regs, int quantity)
 {
   int inx = addr - input_reg_start_addr_;
   if (inx < 0 || inx + quantity > input_reg_count_)
@@ -151,7 +162,8 @@ int ModbusData::write_input_registers(int addr, unsigned short *regs, int quanti
   return MODBUS_NONE;
 }
 
-int ModbusData::mask_write_holding_register(int addr, unsigned short and_mask, unsigned short or_mask)
+template <typename BIT_T, typename REG_T>
+int ModbusDataTemplate<BIT_T, REG_T>::mask_write_holding_register(int addr, unsigned short and_mask, unsigned short or_mask)
 {
   int inx = addr - holding_reg_start_addr_;
   if (inx < 0 || inx + 1 > holding_reg_count_)
@@ -165,7 +177,8 @@ int ModbusData::mask_write_holding_register(int addr, unsigned short and_mask, u
   return MODBUS_NONE;
 }
 
-int ModbusData::write_and_read_holding_registers(int w_addr, unsigned short *w_regs, int w_quantity, int r_addr, int r_quantity, unsigned short *r_regs)
+template <typename BIT_T, typename REG_T>
+int ModbusDataTemplate<BIT_T, REG_T>::write_and_read_holding_registers(int w_addr, unsigned short *w_regs, int w_quantity, int r_addr, int r_quantity, unsigned short *r_regs)
 {
   int w_inx = w_addr - holding_reg_start_addr_;
   int r_inx = r_addr - holding_reg_start_addr_;
@@ -184,7 +197,8 @@ int ModbusData::write_and_read_holding_registers(int w_addr, unsigned short *w_r
   return MODBUS_NONE;
 }
 
-modbus_struct_data<unsigned char>* ModbusData::get_coil_bit_struct(int addr)
+template <typename BIT_T, typename REG_T>
+BIT_T* ModbusDataTemplate<BIT_T, REG_T>::get_coil_bit_struct(int addr)
 {
   int inx = addr - coil_bit_start_addr_;
   if (inx < 0 || inx >= coil_bit_count_)
@@ -192,7 +206,8 @@ modbus_struct_data<unsigned char>* ModbusData::get_coil_bit_struct(int addr)
   return &coil_bits_[inx];
 }
 
-modbus_struct_data<unsigned char>* ModbusData::get_input_bit_struct(int addr)
+template <typename BIT_T, typename REG_T>
+BIT_T* ModbusDataTemplate<BIT_T, REG_T>::get_input_bit_struct(int addr)
 {
   int inx = addr - input_bit_start_addr_;
   if (inx < 0 || inx >= input_bit_count_)
@@ -200,7 +215,8 @@ modbus_struct_data<unsigned char>* ModbusData::get_input_bit_struct(int addr)
   return &input_bits_[inx];
 }
 
-modbus_struct_data<unsigned short>* ModbusData::get_holding_register_struct(int addr)
+template <typename BIT_T, typename REG_T>
+REG_T* ModbusDataTemplate<BIT_T, REG_T>::get_holding_register_struct(int addr)
 {
   int inx = addr - holding_reg_start_addr_;
   if (inx < 0 || inx >= holding_reg_count_)
@@ -208,7 +224,8 @@ modbus_struct_data<unsigned short>* ModbusData::get_holding_register_struct(int 
   return &holding_regs_[inx];
 }
 
-modbus_struct_data<unsigned short>* ModbusData::get_input_register_struct(int addr)
+template <typename BIT_T, typename REG_T>
+REG_T* ModbusDataTemplate<BIT_T, REG_T>::get_input_register_struct(int addr)
 {
   int inx = addr - input_reg_start_addr_;
   if (inx < 0 || inx >= input_reg_count_)
@@ -216,99 +233,189 @@ modbus_struct_data<unsigned short>* ModbusData::get_input_register_struct(int ad
   return &input_regs_[inx];
 }
 
+/* 模板类需要特化 */
+template class ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>;
+template class ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>;
 
-/**************** StaticModbusData *****************/
+// template ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::ModbusDataTemplate(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int);
+// template ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::ModbusDataTemplate(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int);
+// template ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::~ModbusDataTemplate();
+// template ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::~ModbusDataTemplate();
+// template int ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::read_coil_bits(int, int, unsigned char *);
+// template int ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::read_coil_bits(int, int, unsigned char *);
+// template int ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::read_input_bits(int, int, unsigned char *);
+// template int ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::read_input_bits(int, int, unsigned char *);
+// template int ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::read_holding_registers(int, int, unsigned short *);
+// template int ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::read_holding_registers(int, int, unsigned short *);
+// template int ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::read_input_registers(int, int, unsigned short *);
+// template int ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::read_input_registers(int, int, unsigned short *);
+// template int ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::write_coil_bits(int, unsigned char *, int);
+// template int ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::write_coil_bits(int, unsigned char *, int);
+// template int ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::write_input_bits(int, unsigned char *, int);
+// template int ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::write_input_bits(int, unsigned char *, int);
+// template int ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::write_holding_registers(int, unsigned short *, int);
+// template int ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::write_holding_registers(int, unsigned short *, int);
+// template int ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::write_input_registers(int, unsigned short *, int);
+// template int ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::write_input_registers(int, unsigned short *, int);
+// template int ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::mask_write_holding_register(int, unsigned short, unsigned short);
+// template int ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::mask_write_holding_register(int, unsigned short,  unsigned short);
+// template int ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::write_and_read_holding_registers(int, unsigned short *, int, int, int, unsigned short *);
+// template int ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::write_and_read_holding_registers(int, unsigned short *, int, int, int, unsigned short *);
+// template modbus_bit_base_data* ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::get_coil_bit_struct(int);
+// template modbus_bit_struct_data* ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::get_coil_bit_struct(int);
+// template modbus_bit_base_data* ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::get_input_bit_struct(int);
+// template modbus_bit_struct_data* ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::get_input_bit_struct(int);
+// template modbus_reg_base_data* ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::get_holding_register_struct(int);
+// template modbus_reg_struct_data* ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::get_holding_register_struct(int);
+// template modbus_reg_base_data* ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::get_input_register_struct(int);
+// template modbus_reg_struct_data* ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::get_input_register_struct(int);
 
-void StaticModbusData::set_modbus_data(ModbusData* modbus_data)
+/**************** StaticModbusDataTemplate *****************/
+
+template <typename BIT_T, typename REG_T>
+void StaticModbusDataTemplate<BIT_T, REG_T>::set_modbus_data(ModbusDataTemplate<BIT_T, REG_T>* modbus_data)
 {
   modbus_data_ = modbus_data;
 }
 
-ModbusData* StaticModbusData::get_modbus_data(void)
+template <typename BIT_T, typename REG_T>
+ModbusDataTemplate<BIT_T, REG_T>* StaticModbusDataTemplate<BIT_T, REG_T>::get_modbus_data(void)
 {
   return modbus_data_;
 }
 
-int StaticModbusData::read_coil_bits(int addr, int quantity, unsigned char *bits)
+template <typename BIT_T, typename REG_T>
+int StaticModbusDataTemplate<BIT_T, REG_T>::read_coil_bits(int addr, int quantity, unsigned char *bits)
 {
   if (modbus_data_ == NULL) return MODBUS_DATA_NOT_CREATE;
   return modbus_data_->read_coil_bits(addr, quantity, bits);
 }
 
-int StaticModbusData::read_input_bits(int addr, int quantity, unsigned char *bits)
+template <typename BIT_T, typename REG_T>
+int StaticModbusDataTemplate<BIT_T, REG_T>::read_input_bits(int addr, int quantity, unsigned char *bits)
 {
   if (modbus_data_ == NULL) return MODBUS_DATA_NOT_CREATE;
   return modbus_data_->read_input_bits(addr, quantity, bits);
 }
 
-int StaticModbusData::read_holding_registers(int addr, int quantity, unsigned short *regs)
+template <typename BIT_T, typename REG_T>
+int StaticModbusDataTemplate<BIT_T, REG_T>::read_holding_registers(int addr, int quantity, unsigned short *regs)
 {
   if (modbus_data_ == NULL) return MODBUS_DATA_NOT_CREATE;
   return modbus_data_->read_holding_registers(addr, quantity, regs);
 }
 
-int StaticModbusData::read_input_registers(int addr, int quantity, unsigned short *regs)
+template <typename BIT_T, typename REG_T>
+int StaticModbusDataTemplate<BIT_T, REG_T>::read_input_registers(int addr, int quantity, unsigned short *regs)
 {
   if (modbus_data_ == NULL) return MODBUS_DATA_NOT_CREATE;
   return modbus_data_->read_input_registers(addr, quantity, regs);
 }
 
-int StaticModbusData::write_coil_bits(int addr, unsigned char *bits, int quantity)
+template <typename BIT_T, typename REG_T>
+int StaticModbusDataTemplate<BIT_T, REG_T>::write_coil_bits(int addr, unsigned char *bits, int quantity)
 {
   if (modbus_data_ == NULL) return MODBUS_DATA_NOT_CREATE;
   return modbus_data_->write_coil_bits(addr, bits, quantity);
 }
 
-int StaticModbusData::write_input_bits(int addr, unsigned char *bits, int quantity)
+template <typename BIT_T, typename REG_T>
+int StaticModbusDataTemplate<BIT_T, REG_T>::write_input_bits(int addr, unsigned char *bits, int quantity)
 {
   if (modbus_data_ == NULL) return MODBUS_DATA_NOT_CREATE;
   return modbus_data_->write_input_bits(addr, bits, quantity);
 }
 
-int StaticModbusData::write_holding_registers(int addr, unsigned short *regs, int quantity)
+template <typename BIT_T, typename REG_T>
+int StaticModbusDataTemplate<BIT_T, REG_T>::write_holding_registers(int addr, unsigned short *regs, int quantity)
 {
   if (modbus_data_ == NULL) return MODBUS_DATA_NOT_CREATE;
   return modbus_data_->write_holding_registers(addr, regs, quantity);
 }
 
-int StaticModbusData::write_input_registers(int addr, unsigned short *regs, int quantity)
+template <typename BIT_T, typename REG_T>
+int StaticModbusDataTemplate<BIT_T, REG_T>::write_input_registers(int addr, unsigned short *regs, int quantity)
 {
   if (modbus_data_ == NULL) return MODBUS_DATA_NOT_CREATE;
   return modbus_data_->write_input_registers(addr, regs, quantity);
 }
 
-int StaticModbusData::mask_write_holding_register(int addr, unsigned short and_mask, unsigned short or_mask)
+template <typename BIT_T, typename REG_T>
+int StaticModbusDataTemplate<BIT_T, REG_T>::mask_write_holding_register(int addr, unsigned short and_mask, unsigned short or_mask)
 {
   if (modbus_data_ == NULL) return MODBUS_DATA_NOT_CREATE;
   return modbus_data_->mask_write_holding_register(addr, and_mask, or_mask);
 }
 
-int StaticModbusData::write_and_read_holding_registers(int w_addr, unsigned short *w_regs, int w_quantity, int r_addr, int r_quantity, unsigned short *r_regs)
+template <typename BIT_T, typename REG_T>
+int StaticModbusDataTemplate<BIT_T, REG_T>::write_and_read_holding_registers(int w_addr, unsigned short *w_regs, int w_quantity, int r_addr, int r_quantity, unsigned short *r_regs)
 {
   if (modbus_data_ == NULL) return MODBUS_DATA_NOT_CREATE;
   return modbus_data_->write_and_read_holding_registers(w_addr, w_regs, w_quantity, r_addr, r_quantity, r_regs);
 }
 
-modbus_struct_data<unsigned char>* StaticModbusData::get_coil_bit_struct(int addr)
+template <typename BIT_T, typename REG_T>
+BIT_T* StaticModbusDataTemplate<BIT_T, REG_T>::get_coil_bit_struct(int addr)
 {
   if (modbus_data_ == NULL) return NULL;
   return modbus_data_->get_coil_bit_struct(addr);
 }
 
-modbus_struct_data<unsigned char>* StaticModbusData::get_input_bit_struct(int addr)
+template <typename BIT_T, typename REG_T>
+BIT_T* StaticModbusDataTemplate<BIT_T, REG_T>::get_input_bit_struct(int addr)
 {
   if (modbus_data_ == NULL) return NULL;
   return modbus_data_->get_input_bit_struct(addr);
 }
 
-modbus_struct_data<unsigned short>* StaticModbusData::get_holding_register_struct(int addr)
+template <typename BIT_T, typename REG_T>
+REG_T* StaticModbusDataTemplate<BIT_T, REG_T>::get_holding_register_struct(int addr)
 {
   if (modbus_data_ == NULL) return NULL;
   return modbus_data_->get_holding_register_struct(addr);
 }
 
-modbus_struct_data<unsigned short>* StaticModbusData::get_input_register_struct(int addr)
+template <typename BIT_T, typename REG_T>
+REG_T* StaticModbusDataTemplate<BIT_T, REG_T>::get_input_register_struct(int addr)
 {
   if (modbus_data_ == NULL) return NULL;
   return modbus_data_->get_input_register_struct(addr);
 }
+
+/* 模板类需要特化 */
+template class StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>;
+template class StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>;
+
+// template void StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::set_modbus_data(ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data> *);
+// template void StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::set_modbus_data(ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data> *);
+// template ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>* StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::get_modbus_data(void);
+// template ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>* StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::get_modbus_data(void);
+// 
+// template int StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::read_coil_bits(int, int, unsigned char *);
+// template int StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::read_coil_bits(int, int, unsigned char *);
+// template int StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::read_input_bits(int, int, unsigned char *);
+// template int StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::read_input_bits(int, int, unsigned char *);
+// template int StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::read_holding_registers(int, int, unsigned short *);
+// template int StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::read_holding_registers(int, int, unsigned short *);
+// template int StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::read_input_registers(int, int, unsigned short *);
+// template int StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::read_input_registers(int, int, unsigned short *);
+// template int StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::write_coil_bits(int, unsigned char *, int);
+// template int StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::write_coil_bits(int, unsigned char *, int);
+// template int StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::write_input_bits(int, unsigned char *, int);
+// template int StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::write_input_bits(int, unsigned char *, int);
+// template int StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::write_holding_registers(int, unsigned short *, int);
+// template int StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::write_holding_registers(int, unsigned short *, int);
+// template int StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::write_input_registers(int, unsigned short *, int);
+// template int StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::write_input_registers(int, unsigned short *, int);
+// template int StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::mask_write_holding_register(int, unsigned short, unsigned short);
+// template int StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::mask_write_holding_register(int, unsigned short,  unsigned short);
+// template int StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::write_and_read_holding_registers(int, unsigned short *, int, int, int, unsigned short *);
+// template int StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::write_and_read_holding_registers(int, unsigned short *, int, int, int, unsigned short *);
+// template modbus_bit_base_data* StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::get_coil_bit_struct(int);
+// template modbus_bit_struct_data* StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::get_coil_bit_struct(int);
+// template modbus_bit_base_data* StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::get_input_bit_struct(int);
+// template modbus_bit_struct_data* StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::get_input_bit_struct(int);
+// template modbus_reg_base_data* StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::get_holding_register_struct(int);
+// template modbus_reg_struct_data* StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::get_holding_register_struct(int);
+// template modbus_reg_base_data* StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::get_input_register_struct(int);
+// template modbus_reg_struct_data* StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::get_input_register_struct(int);

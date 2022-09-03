@@ -27,9 +27,17 @@ int set_reg(unsigned short val) {
 
 int main(int argc, char *arg[])
 {
+  printf("modbus_base_data<unsigned char>, size=%ld\n", sizeof(modbus_base_data<unsigned char>));
+  printf("modbus_base_data<unsigned short>, size=%ld\n", sizeof(modbus_base_data<unsigned short>));
+
+  // select ModbusData type
+  using ModbusData = ModbusBaseData;
+  using StaticModbusData = StaticModbusBaseData;
+
   // init modbus data
   ModbusData modbus_data(10, 10, 10, 10);
-  // set the modbus data instance to static
+  // set the instance associated with the `StaticModbusData`
+  // at this time, the static method of the `StaticModbusData` is equivalent to calling the method of the `modbus_data`
   StaticModbusData::set_modbus_data(&modbus_data);
 
   unsigned char r_bits[8] = {0};
@@ -45,7 +53,7 @@ int main(int argc, char *arg[])
   StaticModbusData::read_coil_bits(0x00, 8, r_bits);
   print_datas<unsigned char>("[2] bits", r_bits, 8);
 
-  // bind the get function
+  // bind the get function: not available
   for (int i = 0; i < 8; i++) {
     StaticModbusData::get_coil_bit_struct(i)->bind_get(get_bit);
   }
@@ -60,7 +68,7 @@ int main(int argc, char *arg[])
   StaticModbusData::read_holding_registers(0x00, 8, r_regs);
   print_datas<unsigned short>("[1] regs", r_regs, 8);
 
-  // bind the set function
+  // bind the set function: not available
   for (int i = 0; i < 8; i++) {
     StaticModbusData::get_holding_register_struct(i)->bind_set(set_reg);
   }
@@ -71,14 +79,13 @@ int main(int argc, char *arg[])
   StaticModbusData::read_holding_registers(0x00, 8, r_regs);
   print_datas<unsigned short>("[2] regs", r_regs, 8);
 
-  // bind the get function
+  // bind the get function: not available
   for (int i = 0; i < 8; i++) {
     StaticModbusData::get_holding_register_struct(i)->bind_get(get_reg);
   }
   // read holding registers
   StaticModbusData::read_holding_registers(0x00, 8, r_regs);
   print_datas<unsigned short>("[3] regs", r_regs, 8);
-
 
   return 0;
 }
