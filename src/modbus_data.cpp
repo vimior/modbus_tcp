@@ -236,6 +236,8 @@ REG_T* ModbusDataTemplate<BIT_T, REG_T>::get_input_register_struct(int addr)
 /* 模板类需要特化 */
 template class ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>;
 template class ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>;
+template class ModbusDataTemplate<modbus_bit_base_data, modbus_reg_struct_data>;
+template class ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_base_data>;
 
 // template ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::ModbusDataTemplate(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int);
 // template ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::ModbusDataTemplate(unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int);
@@ -385,6 +387,8 @@ REG_T* StaticModbusDataTemplate<BIT_T, REG_T>::get_input_register_struct(int add
 /* 模板类需要特化 */
 template class StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>;
 template class StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>;
+template class StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_struct_data>;
+template class StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_base_data>;
 
 // template void StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data>::set_modbus_data(ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data> *);
 // template void StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data>::set_modbus_data(ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data> *);

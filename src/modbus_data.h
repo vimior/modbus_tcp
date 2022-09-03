@@ -250,7 +250,7 @@ typedef modbus_base_data<unsigned short> modbus_reg_base_data;
 typedef modbus_struct_data<unsigned char> modbus_bit_struct_data;
 typedef modbus_struct_data<unsigned short> modbus_reg_struct_data;
 
-/* Modbus数据寄存器的操作类 */
+/* Modbus数据寄存器的操作模板类 */
 template <typename BIT_T = modbus_bit_base_data, typename REG_T = modbus_reg_base_data>
 class ModbusDataTemplate
 {
@@ -402,7 +402,7 @@ private:
   REG_T *input_regs_;    // 输入寄存器数组
 };
 
-/* Modbus数据寄存器的静态操作类 */
+/* Modbus数据寄存器的静态操作模板类 */
 template <typename BIT_T = modbus_bit_base_data, typename REG_T = modbus_reg_base_data>
 class StaticModbusDataTemplate 
 {
@@ -433,9 +433,20 @@ private:
   static ModbusDataTemplate<BIT_T, REG_T> *modbus_data_;
 };
 
+// Modbus数据寄存器的操作类(基本型数据结构), 不额外占用空间开销, 但不支持绑定额外的读写方法
 typedef ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data> ModbusBaseData;
+// Modbus数据寄存器的静态操作类(基本型数据结构), 不额外占用空间, 但不支持绑定额外的读写方法
 typedef StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_data> StaticModbusBaseData;
+
+// Modbus数据寄存器的操作类(扩展型数据结构), 支持绑定额外的读写方法, 但会占用额外的空间开销
 typedef ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data> ModbusStructData;
+// Modbus数据寄存器的静态操作类(扩展型数据结构), 支持绑定额外的读写方法, 但会占用额外的空间开销
 typedef StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_data> StaticModbusStructData;
+
+// 混搭
+// ModbusDataTemplate<modbus_bit_base_data, modbus_reg_struct_data>
+// StaticModbusDataTemplate<modbus_bit_base_data, modbus_reg_struct_data>
+// ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_base_data>
+// StaticModbusDataTemplate<modbus_bit_struct_data, modbus_reg_base_data>
 
 #endif // _MODBUS_DATA_H_
