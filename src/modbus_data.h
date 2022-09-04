@@ -58,12 +58,6 @@ struct modbus_base_data {
   /* set_data: 直接设置寄存器的值 */
   int set_data(T val) { data = val; return 0; }
 
-  /* 不支持, 定义仅仅为了兼容modbus_struct_data的代码 */ 
-  int bind_get(T(*func)(T)) { return -1; }
-  int bind_get(std::function<T (T)> func) { return -1; }
-  int bind_set(int (*func)(T)) { return -1; }
-  int bind_set(std::function<int (T)> func) { return -1; }
-
 private:
   T data;
 };
