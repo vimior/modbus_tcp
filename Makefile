@@ -15,7 +15,7 @@ C_FLAGS = -std=c++11 -fPIC -I$(INC_DIR)
 LD_FLAGS = -fPIC -shared
 
 LIB_SOURCES := $(wildcard $(SRC_DIR)*.cpp)
-LIB_BASENAME = modbus_data
+LIB_BASENAME = modbus_tcp
 LIB_NAME = lib$(LIB_BASENAME).a
 
 TEST_SOURCES := $(wildcard $(TEST_DIR)*.cpp)
