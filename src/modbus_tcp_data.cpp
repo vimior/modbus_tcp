@@ -112,10 +112,84 @@ namespace ModbusTCP
   }
 
   /************************* DataService ***************************/
+  
+  template <class ModbusData>
+  DataService<ModbusData>::DataService(ModbusData *modbus_data)
+  {
+    data_length_ = 0;
+    buf_ = new unsigned char[512];
+    modbus_data_ = modbus_data;
+    session_ = new DataSession();
+  }
+
+  template <class ModbusData>
+  DataService<ModbusData>::~DataService()
+  {
+    if (buf_ != NULL) {
+      delete[] buf_;
+      buf_ = NULL;
+    }
+    if (session_ != NULL) {
+      delete session_;
+      session_ = NULL;
+    }
+  }
+
+  template <class ModbusData>
+  int DataService<ModbusData>::process_data(unsigned char *data, int length, void(*callback)(DataSession *), bool is_checked)
+  {
+    if (is_checked) {
+      session_->set_request_data(data, length);
+      process_session(session_, modbus_data_);
+      callback(session_);
+      return 0;
+    }
+
+    if (data_length_ + length < 7) {
+      // 长度不够
+      memcpy(buf_ + data_length_, data, length);
+      data_length_ += length;
+      return -1; 
+    }
+
+    int len = 0;
+    int remain = length;
+    int cpy_inx = 0;
+    while (1) {
+      if (data_length_ + remain < 7) {
+        // 长度不够
+        memcpy(buf_ + data_length_, data + cpy_inx, remain);
+        data_length_ += remain;
+        return -1;
+      }
+      if (data_length_ < 7) {
+        memcpy(buf_ + data_length_, data + cpy_inx, 7 - data_length_);
+        cpy_inx += 7 - data_length_;
+        remain = length - cpy_inx;
+        data_length_ = 7;
+      }
+      len = HexData::bin8_to_u16(buf_ + 4);
+      if (data_length_ + remain < len + 6) {
+        // 数据长度不够
+        memcpy(buf_ + data_length_, data + cpy_inx, remain);
+        data_length_ += remain;
+        return -1; 
+      }
+      memcpy(buf_ + data_length_, data + cpy_inx, len + 6 - data_length_);
+      session_->set_request_data(buf_, len + 6);
+      process_session(session_, modbus_data_);
+      callback(session_);
+      cpy_inx += len + 6 - data_length_;
+      remain = length - cpy_inx;
+      data_length_ = 0;
+      if (remain == 0) return 0;      
+    }
+  }
 
   template <class ModbusData>
   void DataService<ModbusData>::process_session(DataSession *session, ModbusData *modbus_data)
   {
+    // session->request->data_length >= 6 + HexData::bin8_to_u16(session->request->raw_data + 4)
     session->response->set_raw_data(session->request->raw_data, 8);
     int code = EXP_NONE;
     switch (session->request->pdu_data[0]) {
@@ -158,6 +232,7 @@ namespace ModbusTCP
   template <class ModbusData>
   int DataService<ModbusData>::_read_bits(DataSession *session, ModbusData *modbus_data)
   {
+    if (session->request->data_length < 12) return EXP_ILLEGAL_DATA_VALUE;
     int start_addr = HexData::bin8_to_u16(session->request->pdu_data + 1);
     int quantity = HexData::bin8_to_u16(session->request->pdu_data + 3);
     int code = EXP_ILLEGAL_DATA_VALUE;
@@ -191,6 +266,7 @@ namespace ModbusTCP
   template <class ModbusData>
   int DataService<ModbusData>::_read_registers(DataSession *session, ModbusData *modbus_data)
   {
+    if (session->request->data_length < 12) return EXP_ILLEGAL_DATA_VALUE;
     int start_addr = HexData::bin8_to_u16(session->request->pdu_data + 1);
     int quantity = HexData::bin8_to_u16(session->request->pdu_data + 3);
     int code = EXP_ILLEGAL_DATA_VALUE;
@@ -221,6 +297,7 @@ namespace ModbusTCP
   template <class ModbusData>
   int DataService<ModbusData>::_write_single_coil_bit(DataSession *session, ModbusData *modbus_data)
   {
+    if (session->request->data_length < 12) return EXP_ILLEGAL_DATA_VALUE;
     int bit_addr = HexData::bin8_to_u16(session->request->pdu_data + 1);
     int bit_val = HexData::bin8_to_u16(session->request->pdu_data + 3);
     int code = EXP_ILLEGAL_DATA_VALUE;
@@ -238,6 +315,7 @@ namespace ModbusTCP
   template <class ModbusData>
   int DataService<ModbusData>::_write_single_holding_register(DataSession *session, ModbusData *modbus_data)
   {
+    if (session->request->data_length < 12) return EXP_ILLEGAL_DATA_VALUE;
     int reg_addr = HexData::bin8_to_u16(session->request->pdu_data + 1);
     unsigned short reg_val = HexData::bin8_to_u16(session->request->pdu_data + 3);
     unsigned short regs[1] = {reg_val};
@@ -252,6 +330,7 @@ namespace ModbusTCP
   template <class ModbusData>
   int DataService<ModbusData>::_write_multiple_coil_bits(DataSession *session, ModbusData *modbus_data)
   {
+    if (session->request->data_length < 13) return EXP_ILLEGAL_DATA_VALUE;
     int start_addr = HexData::bin8_to_u16(session->request->pdu_data + 1);
     int quantity = HexData::bin8_to_u16(session->request->pdu_data + 3);
     int byte_count = session->request->pdu_data[5];
@@ -278,6 +357,7 @@ namespace ModbusTCP
   template <class ModbusData>
   int DataService<ModbusData>::_write_multiple_holding_registers(DataSession *session, ModbusData *modbus_data)
   {
+    if (session->request->data_length < 13) return EXP_ILLEGAL_DATA_VALUE;
     int start_addr = HexData::bin8_to_u16(session->request->pdu_data + 1);
     int quantity = HexData::bin8_to_u16(session->request->pdu_data + 3);
     int byte_count = session->request->pdu_data[5];
@@ -303,6 +383,7 @@ namespace ModbusTCP
   template <class ModbusData>
   int DataService<ModbusData>::_mask_write_holding_register(DataSession *session, ModbusData *modbus_data)
   {
+    if (session->request->data_length < 14) return EXP_ILLEGAL_DATA_VALUE;
     int ref_addr = HexData::bin8_to_u16(session->request->pdu_data + 1);
     unsigned short and_mask = HexData::bin8_to_u16(session->request->pdu_data + 3);
     unsigned short or_mask = HexData::bin8_to_u16(session->request->pdu_data + 5);
@@ -317,6 +398,7 @@ namespace ModbusTCP
   template <class ModbusData>
   int DataService<ModbusData>::_write_and_read_multiple_holding_registers(DataSession *session, ModbusData *modbus_data)
   {
+    if (session->request->data_length < 17) return EXP_ILLEGAL_DATA_VALUE;
     int r_start_addr = HexData::bin8_to_u16(session->request->pdu_data + 1);
     int r_quantity = HexData::bin8_to_u16(session->request->pdu_data + 3);
     int w_start_addr = HexData::bin8_to_u16(session->request->pdu_data + 5);
@@ -352,5 +434,23 @@ namespace ModbusTCP
   /* 模板类需要特化 */
   template class DataService<ModbusBaseData>;
   template class DataService<ModbusStructData>;
+  template class DataService<ModbusBasePtrData>;
+  template class DataService<ModbusStructPtrData>;
+
+  template class DataService<ModbusDataTemplate<modbus_bit_base_data, modbus_reg_base_ptr_data>>;
+  template class DataService<ModbusDataTemplate<modbus_bit_base_data, modbus_reg_struct_data>>;
+  template class DataService<ModbusDataTemplate<modbus_bit_base_data, modbus_reg_struct_ptr_data>>;
+  
+  template class DataService<ModbusDataTemplate<modbus_bit_base_ptr_data, modbus_reg_base_data>>;
+  template class DataService<ModbusDataTemplate<modbus_bit_base_ptr_data, modbus_reg_struct_data>>;
+  template class DataService<ModbusDataTemplate<modbus_bit_base_ptr_data, modbus_reg_struct_ptr_data>>;
+
+  template class DataService<ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_base_data>>;
+  template class DataService<ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_base_ptr_data>>;
+  template class DataService<ModbusDataTemplate<modbus_bit_struct_data, modbus_reg_struct_ptr_data>>;
+
+  template class DataService<ModbusDataTemplate<modbus_bit_struct_ptr_data, modbus_reg_base_data>>;
+  template class DataService<ModbusDataTemplate<modbus_bit_struct_ptr_data, modbus_reg_base_ptr_data>>;
+  template class DataService<ModbusDataTemplate<modbus_bit_struct_ptr_data, modbus_reg_struct_data>>;
 } // namespace ModbusTCP
 

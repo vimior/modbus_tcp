@@ -83,6 +83,19 @@ namespace ModbusTCP
   class DataService
   {
   public:
+    DataService(ModbusData *modbus_data);
+    ~DataService();
+    
+    /* process_data: 处理接收到的数据
+     * @param data: 接收到的数据
+     * @param length: 数据长度
+     * @param callback: 每处理一帧完整的Modbus TCP数据的回调，参数是指向session的指针
+     * @param is_checked: 是否是完整的一帧Modbus TCP请求数据，如果为false，函数内部会做处理(检查、拆包等)
+     * :return: 返回
+     *    -1: 表示缓存的数据长度不够一帧完整的Modbus TCP数据
+     *     0: 
+     */
+    int process_data(unsigned char *data, int length, void(*callback)(DataSession *), bool is_checked = false);
     static void process_session(DataSession *session, ModbusData *modbus_data);
   private:
     // 0x01/0x02
@@ -101,6 +114,12 @@ namespace ModbusTCP
     static int _mask_write_holding_register(DataSession *session, ModbusData *modbus_data);
     // 0x17
     static int _write_and_read_multiple_holding_registers(DataSession *session, ModbusData *modbus_data);
+  
+  private:
+    int data_length_;     // 缓冲区内的数据长度
+    unsigned char *buf_;  // 缓冲区
+    ModbusData *modbus_data_; // 寄存器操作实例
+    DataSession *session_;
   };
 }
 

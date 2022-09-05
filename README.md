@@ -1,5 +1,5 @@
 # modbus_tcp
-Modbus TCP标准协议的C++实现，支持两种不同的Modbus数据结构的使用
+Modbus TCP标准协议的C++实现，支持四种不同的Modbus数据结构的使用
 - 基本型数据结构: `modbus_base_data`
   - 数据结构包含原始数据，大小和原始数据一致
   - 数据的更新需要主动调用数据结构的`set_data`方法更新
@@ -223,6 +223,7 @@ Modbus TCP标准协议的C++实现，支持两种不同的Modbus数据结构的�
 
 ## Modbus TCP数据处理
 - 这里假定已经在程序别的地方创建好Modbus寄存器，并绑定到Modbus数据的静态操作类上，参照 __Modbus数据寄存器读写__
+- 支持粘包处理
   
   ```c++
   // 头文件导入
