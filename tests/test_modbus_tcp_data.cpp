@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <iostream>
-#include "modbus_tcp.h"
+#include "modbus_tcp_data.h"
 
 template <class T>
 void print_datas(std::string str, T *data, int length)
@@ -14,11 +14,11 @@ void print_datas(std::string str, T *data, int length)
 
 int main(int argc, char *arg[])
 {
-  // using ModbusData = ModbusBaseData;
+  // 选择寄存器数据类型为 modbus_struct_data 结构对应的操作类
   using ModbusData = ModbusStructData;
   using DataService = ModbusTCP::DataService<ModbusData>;
 
-  // init modbus data
+  // 创建Modbus寄存器
   ModbusData modbus_data(10, 10, 10, 10);
   unsigned short regs[10] = { 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
   modbus_data.write_input_registers(0x00, regs, 10);

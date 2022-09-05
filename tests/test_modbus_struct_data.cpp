@@ -13,7 +13,7 @@ void print_datas(std::string str, T *data, int length)
 }
 
 unsigned char get_bit(unsigned char val) {
-  return 11; 
+  return 1; 
 }
 
 unsigned short get_reg(unsigned short val) {
@@ -30,62 +30,66 @@ int main(int argc, char *arg[])
   printf("modbus_struct_data<unsigned char>, size=%ld\n", sizeof(modbus_struct_data<unsigned char>));
   printf("modbus_struct_data<unsigned short>, size=%ld\n", sizeof(modbus_struct_data<unsigned short>));
   
-  // select ModbusData type
+  // 选择寄存器数据类型为 modbus_struct_data 结构对应的操作类
   using ModbusData = ModbusStructData;
   using StaticModbusData = StaticModbusStructData;
 
-  // init modbus data
+  // 创建Modbus寄存器
   ModbusData modbus_data(10, 10, 10, 10);
-  // set the instance associated with the `StaticModbusData`
-  // at this time, the static method of the `StaticModbusData` is equivalent to calling the method of the `modbus_data`
+  // 绑定寄存器操作实例到对应的静态操作类，这样就可以通过静态类操作到实例了
+  // 也可以不绑定，直接通过实例操作，绑定是为了在整个程序的任何地方都能通过静态类访问
   StaticModbusData::set_modbus_data(&modbus_data);
 
-  unsigned char r_bits[8] = {0};
-  unsigned char w_bits[8] = {0, 1, 0, 1, 0, 1, 0, 1};
-  // read coil bits
-  StaticModbusData::read_coil_bits(0x00, 8, r_bits);
-  print_datas<unsigned char>("[1] bits", r_bits, 8);
+  int start_addr = 0x00; // 该示例操作的寄存器起始地址
+  int quantity = 8; // 该示例操作的寄存器个数
 
-  // write coil bits
-  StaticModbusData::write_coil_bits(0x00, w_bits, 8);
+  unsigned char r_bits[quantity] = {0};
+  // 读取线圈状态寄存器
+  StaticModbusData::read_coil_bits(start_addr, quantity, r_bits);
+  print_datas<unsigned char>("[1] bits", r_bits, quantity);
 
-  // read coil bits
-  StaticModbusData::read_coil_bits(0x00, 8, r_bits);
-  print_datas<unsigned char>("[2] bits", r_bits, 8);
+  unsigned char w_bits[quantity] = {0, 1, 0, 1, 0, 1, 0, 1};
+  // 写数据到线圈状态寄存器
+  StaticModbusData::write_coil_bits(start_addr, w_bits, quantity);
 
-  // bind the get function
-  for (int i = 0; i < 8; i++) {
-    StaticModbusData::get_coil_bit_struct(i)->bind_get(get_bit);
+  // 读取线圈状态寄存器
+  StaticModbusData::read_coil_bits(start_addr, quantity, r_bits);
+  print_datas<unsigned char>("[2] bits", r_bits, quantity);
+
+  // 给线圈状态寄存器额外绑定get方法，之后读取对应寄存器的值将由绑定的方法返回
+  for (int i = 0; i < quantity; i++) {
+    StaticModbusData::get_coil_bit_struct(start_addr + i)->bind_get(get_bit);
   }
-  // read coil bits
-  StaticModbusData::read_coil_bits(0x00, 8, r_bits);
-  print_datas<unsigned char>("[3] bits", r_bits, 8);
+  // 读取线圈状态寄存器, 此时读取的值将由绑定的方法返回
+  StaticModbusData::read_coil_bits(start_addr, quantity, r_bits);
+  print_datas<unsigned char>("[3] bits", r_bits, quantity);
 
 
-  unsigned short r_regs[8] = {0};
-  unsigned short w_regs[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-  // read holding registers
-  StaticModbusData::read_holding_registers(0x00, 8, r_regs);
-  print_datas<unsigned short>("[1] regs", r_regs, 8);
+  unsigned short r_regs[quantity] = {0};
+  // 读取保持寄存器
+  StaticModbusData::read_holding_registers(start_addr, quantity, r_regs);
+  print_datas<unsigned short>("[1] regs", r_regs, quantity);
 
-  // bind the set function
-  for (int i = 0; i < 8; i++) {
-    StaticModbusData::get_holding_register_struct(i)->bind_set(set_reg);
+  // 给保持寄存器额外绑定set方法，之后写对应寄存器的值将会调用绑定的方法
+  for (int i = 0; i < quantity; i++) {
+    StaticModbusData::get_holding_register_struct(start_addr + i)->bind_set(set_reg);
   }
-  // write holding registers
-  StaticModbusData::write_holding_registers(0x00, w_regs, 8);
 
-  // read holding registers
-  StaticModbusData::read_holding_registers(0x00, 8, r_regs);
-  print_datas<unsigned short>("[2] regs", r_regs, 8);
+  unsigned short w_regs[quantity] = {1, 2, 3, 4, 5, 6, 7, 8};
+  // 写数据到保持寄存器, 此时每个要写入的寄存器都会调用到绑定的set方法
+  StaticModbusData::write_holding_registers(start_addr, w_regs, quantity);
 
-  // bind the get function
-  for (int i = 0; i < 8; i++) {
-    StaticModbusData::get_holding_register_struct(i)->bind_get(get_reg);
+  // 读取保持寄存器
+  StaticModbusData::read_holding_registers(start_addr, quantity, r_regs);
+  print_datas<unsigned short>("[2] regs", r_regs, quantity);
+
+  // 给保持寄存器额外绑定get方法，之后读取对应寄存器的值将由绑定的方法返回
+  for (int i = 0; i < quantity; i++) {
+    StaticModbusData::get_holding_register_struct(start_addr + i)->bind_get(get_reg);
   }
-  // read holding registers
-  StaticModbusData::read_holding_registers(0x00, 8, r_regs);
-  print_datas<unsigned short>("[3] regs", r_regs, 8);
+  // 读取保持寄存器, 此时读取的值将由绑定的方法返回
+  StaticModbusData::read_holding_registers(start_addr, quantity, r_regs);
+  print_datas<unsigned short>("[3] regs", r_regs, quantity);
 
   return 0;
 }

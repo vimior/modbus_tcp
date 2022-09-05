@@ -8,7 +8,7 @@
  */
 
 #include <string.h>
-#include "modbus_tcp.h"
+#include "modbus_tcp_data.h"
 
 namespace ModbusTCP
 {
