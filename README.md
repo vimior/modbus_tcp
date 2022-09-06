@@ -1,4 +1,9 @@
 # modbus_tcp
+## 功能概括
+- __Modbus数据的处理__（各种寄存器数据的定义和操作）
+- __Modbus TCP数据的处理__（输入为接收到的Modbus TCP数据，输出为回复数据，支持粘包处理）
+- 实际综合使用示例: [test_main](tests/test_main.cpp)
+
 Modbus TCP标准协议的C++实现，支持四种不同的Modbus数据结构的使用
 - 基本型数据结构: `modbus_base_data`
   - 数据结构包含原始数据，大小和原始数据一致
@@ -224,6 +229,7 @@ Modbus TCP标准协议的C++实现，支持四种不同的Modbus数据结构的�
 ## Modbus TCP数据处理
 - 这里假定已经在程序别的地方创建好Modbus寄存器，并绑定到Modbus数据的静态操作类上，参照 __Modbus数据寄存器读写__
 - 支持粘包处理
+- 参考[test_modbus_tcp_data](tests/test_modbus_tcp_data.cpp)
   
   ```c++
   // 头文件导入
