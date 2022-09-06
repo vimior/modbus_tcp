@@ -3,7 +3,7 @@
 #include "modbus_data.h"
 
 template <class T>
-void print_datas(std::string str, T *data, int length)
+void print_datas(std::string str, const T *data, int length)
 {
   printf("%s: ", str.c_str());
   for (int i = 0; i < length; i++) {

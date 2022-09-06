@@ -3,7 +3,7 @@
 #include "modbus_tcp_data.h"
 
 template <class T>
-void print_datas(std::string str, T *data, int length)
+void print_datas(std::string str, const T *data, const int length)
 {
   printf("%s: ", str.c_str());
   for (int i = 0; i < length; i++) {
@@ -12,8 +12,14 @@ void print_datas(std::string str, T *data, int length)
   printf("\n");
 }
 
-void callback(ModbusTCP::DataSession *s) {
-  print_datas<unsigned char>("response", s->get_response_data(), s->get_response_length());
+// void callback(ModbusTCP::DataSession *s) {
+//   print_datas<unsigned char>("request", s->get_request_data(), s->get_request_length());
+//   print_datas<unsigned char>("response", s->get_response_data(), s->get_response_length());
+// }
+
+void callback(const unsigned char *req, const int req_len, const unsigned char *res, const int res_len) {
+  print_datas<unsigned char>("request", req, req_len);
+  print_datas<unsigned char>("response", res, res_len);
 }
 
 int main(int argc, char *arg[])

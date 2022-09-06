@@ -71,8 +71,10 @@ namespace ModbusTCP
     ~DataSession();
 
     void set_request_data(unsigned char *data, int length);
-    unsigned char* get_response_data(void);
-    int get_response_length(void);
+    const unsigned char* get_request_data(void);
+    const unsigned char* get_response_data(void);
+    const int get_request_length(void);
+    const int get_response_length(void);
   
   private:
     DataFrame *request;
@@ -89,13 +91,19 @@ namespace ModbusTCP
     /* process_data: 处理接收到的数据
      * @param data: 接收到的数据
      * @param length: 数据长度
-     * @param callback: 每处理一帧完整的Modbus TCP数据的回调，参数是指向session的指针
+     * @param callback: 每处理一帧完整的Modbus TCP数据的回调，回调参数(const unsigned char*, const int, const unsigned char*, const int)，分别表示完整的请求数据，请求长度，回复数据，回复长度
      * @param is_checked: 是否是完整的一帧Modbus TCP请求数据，如果为false，函数内部会做处理(检查、拆包等)
-     * :return: 返回
-     *    -1: 表示缓存的数据长度不够一帧完整的Modbus TCP数据
-     *     0: 
      */
-    int process_data(unsigned char *data, int length, void(*callback)(DataSession *), bool is_checked = false);
+    void process_data(unsigned char *data, int length, void(*callback)(const unsigned char*, const int, const unsigned char*, const int), bool is_checked = false);
+    
+    // /* process_data: 处理接收到的数据
+    //  * @param data: 接收到的数据
+    //  * @param length: 数据长度
+    //  * @param callback: 每处理一帧完整的Modbus TCP数据的回调，参数是指向session的const指针
+    //  * @param is_checked: 是否是完整的一帧Modbus TCP请求数据，如果为false，函数内部会做处理(检查、拆包等)
+    //  */
+    // void process_data(unsigned char *data, int length, void(*callback)(DataSession *), bool is_checked = false);
+    
     static void process_session(DataSession *session, ModbusData *modbus_data);
   private:
     // 0x01/0x02

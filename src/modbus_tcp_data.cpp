@@ -18,6 +18,7 @@ namespace ModbusTCP
   {
     if (buf_size_ < 12) buf_size_ = 12;
     raw_data = new unsigned char[buf_size_];
+    memset(raw_data, 0, buf_size_);
     pdu_data = raw_data + 7;
     data_length = 0;
   }
@@ -55,6 +56,7 @@ namespace ModbusTCP
     unsigned char *old = raw_data;
     buf_size_ = pdu_size + 7;
     raw_data = new unsigned char[buf_size_];
+    memset(raw_data, 0, buf_size_);
     pdu_data = raw_data + 7;
     memcpy(raw_data, old, data_length);
     if (old != NULL) {
@@ -102,11 +104,22 @@ namespace ModbusTCP
     request->set_raw_data(data, length);
   }
 
-  unsigned char* DataSession::get_response_data(void)
+  const unsigned char* DataSession::get_request_data(void)
+  {
+    return request->raw_data;
+  }
+
+  const unsigned char* DataSession::get_response_data(void)
   {
     return response->raw_data;
   }
-  int DataSession::get_response_length(void)
+  
+  const int DataSession::get_request_length(void)
+  {
+    return request->data_length;
+  }
+
+  const int DataSession::get_response_length(void)
   {
     return response->data_length;
   }
@@ -136,20 +149,20 @@ namespace ModbusTCP
   }
 
   template <class ModbusData>
-  int DataService<ModbusData>::process_data(unsigned char *data, int length, void(*callback)(DataSession *), bool is_checked)
+  void DataService<ModbusData>::process_data(unsigned char *data, int length, void(*callback)(const unsigned char*, const int, const unsigned char*, const int), bool is_checked)
   {
     if (is_checked) {
       session_->set_request_data(data, length);
       process_session(session_, modbus_data_);
-      callback(session_);
-      return 0;
+      callback(session_->get_request_data(), session_->get_request_length(), session_->get_response_data(), session_->get_response_length());
+      return;
     }
 
     if (data_length_ + length < 7) {
       // 长度不够
       memcpy(buf_ + data_length_, data, length);
       data_length_ += length;
-      return -1; 
+      return; 
     }
 
     int len = 0;
@@ -160,7 +173,7 @@ namespace ModbusTCP
         // 长度不够
         memcpy(buf_ + data_length_, data + cpy_inx, remain);
         data_length_ += remain;
-        return -1;
+        return;
       }
       if (data_length_ < 7) {
         memcpy(buf_ + data_length_, data + cpy_inx, 7 - data_length_);
@@ -173,18 +186,69 @@ namespace ModbusTCP
         // 数据长度不够
         memcpy(buf_ + data_length_, data + cpy_inx, remain);
         data_length_ += remain;
-        return -1; 
+        return; 
       }
       memcpy(buf_ + data_length_, data + cpy_inx, len + 6 - data_length_);
       session_->set_request_data(buf_, len + 6);
       process_session(session_, modbus_data_);
-      callback(session_);
+      callback(session_->get_request_data(), session_->get_request_length(), session_->get_response_data(), session_->get_response_length());
       cpy_inx += len + 6 - data_length_;
       remain = length - cpy_inx;
       data_length_ = 0;
-      if (remain == 0) return 0;      
+      if (remain == 0) return;      
     }
   }
+
+  // template <class ModbusData>
+  // void DataService<ModbusData>::process_data(unsigned char *data, int length, void(*callback)(DataSession *), bool is_checked)
+  // {
+  //   if (is_checked) {
+  //     session_->set_request_data(data, length);
+  //     process_session(session_, modbus_data_);
+  //     callback(session_);
+  //     return;
+  //   }
+
+  //   if (data_length_ + length < 7) {
+  //     // 长度不够
+  //     memcpy(buf_ + data_length_, data, length);
+  //     data_length_ += length;
+  //     return; 
+  //   }
+
+  //   int len = 0;
+  //   int remain = length;
+  //   int cpy_inx = 0;
+  //   while (1) {
+  //     if (data_length_ + remain < 7) {
+  //       // 长度不够
+  //       memcpy(buf_ + data_length_, data + cpy_inx, remain);
+  //       data_length_ += remain;
+  //       return;
+  //     }
+  //     if (data_length_ < 7) {
+  //       memcpy(buf_ + data_length_, data + cpy_inx, 7 - data_length_);
+  //       cpy_inx += 7 - data_length_;
+  //       remain = length - cpy_inx;
+  //       data_length_ = 7;
+  //     }
+  //     len = HexData::bin8_to_u16(buf_ + 4);
+  //     if (data_length_ + remain < len + 6) {
+  //       // 数据长度不够
+  //       memcpy(buf_ + data_length_, data + cpy_inx, remain);
+  //       data_length_ += remain;
+  //       return; 
+  //     }
+  //     memcpy(buf_ + data_length_, data + cpy_inx, len + 6 - data_length_);
+  //     session_->set_request_data(buf_, len + 6);
+  //     process_session(session_, modbus_data_);
+  //     callback(session_);
+  //     cpy_inx += len + 6 - data_length_;
+  //     remain = length - cpy_inx;
+  //     data_length_ = 0;
+  //     if (remain == 0) return;      
+  //   }
+  // }
 
   template <class ModbusData>
   void DataService<ModbusData>::process_session(DataSession *session, ModbusData *modbus_data)
