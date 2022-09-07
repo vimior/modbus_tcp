@@ -182,6 +182,12 @@ namespace ModbusTCP
         data_length_ = 7;
       }
       len = HexData::bin8_to_u16(buf_ + 4);
+      if (len > 254) {
+        // Modbus TCP一帧数据最多260字节
+        printf("Modbus tcp data length is wrong, discard this part of data and clear the buffer, len=%d\n", len);
+        data_length_ = 0;
+        return;
+      }
       if (data_length_ + remain < len + 6) {
         // 数据长度不够
         memcpy(buf_ + data_length_, data + cpy_inx, remain);
@@ -233,6 +239,12 @@ namespace ModbusTCP
   //       data_length_ = 7;
   //     }
   //     len = HexData::bin8_to_u16(buf_ + 4);
+  //     if (len > 254) {
+  //       // Modbus TCP一帧数据最多260字节
+  //       printf("Modbus tcp data length is wrong, discard this part of data and clear the buffer, len=%d\n", len);
+  //       data_length_ = 0;
+  //       return;
+  //     }
   //     if (data_length_ + remain < len + 6) {
   //       // 数据长度不够
   //       memcpy(buf_ + data_length_, data + cpy_inx, remain);
@@ -253,8 +265,15 @@ namespace ModbusTCP
   template <class ModbusData>
   void DataService<ModbusData>::process_session(DataSession *session, ModbusData *modbus_data)
   {
-    // session->request->data_length >= 6 + HexData::bin8_to_u16(session->request->raw_data + 4)
     session->response->set_raw_data(session->request->raw_data, 8);
+    // check modbus tcp data length
+    int len = HexData::bin8_to_u16(session->request->raw_data + 4) + 6;
+    if (session->request->data_length < 8 || len > 260 || session->request->data_length < len) {
+      // data_length_ < MABP(7) + FUNC_CODE(1)
+      session->response->set_code(EXP_ILLEGAL_DATA_VALUE);
+      session->response->update_mbap_length();
+      return;
+    }
     int code = EXP_NONE;
     switch (session->request->pdu_data[0]) {
       case MODBUS_FC_READ_COILS:  // 0x01
