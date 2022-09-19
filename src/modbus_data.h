@@ -27,7 +27,7 @@
 enum ModbusDataCode {
   MODBUS_DATA_NOT_CREATE = -1,     // ModbusData未创建
   MODBUS_NONE = 0x0,          // 正常
-  MODBUS_DATA_ILLEGAL_ADDR = 0x03  // 访问的寄存器地址非法
+  MODBUS_DATA_ILLEGAL_ADDR = 0x02  // 访问的寄存器地址非法
 };
 
 typedef unsigned char uchar;
