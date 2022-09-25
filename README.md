@@ -1,4 +1,7 @@
-# modbus_tcp
+# modbus_tcp(C++实现)
+
+__Python实现请切换到[Python分支](https://github.com/vimior/modbus_tcp/tree/python)__
+
 ## 功能概括
 - __Modbus数据的处理__（各种寄存器数据的定义和操作）
 - __Modbus TCP数据的处理__（输入为接收到的Modbus TCP数据，输出为回复数据，支持粘包处理）
