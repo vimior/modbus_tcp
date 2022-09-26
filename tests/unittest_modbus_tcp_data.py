@@ -23,11 +23,11 @@ class TestModbusTcpData(unittest.TestCase):
         service.process_session(session)
         req = session.request
         res = session.response
-        self.assertTrue(res.transaction_id.value == req.transaction_id.value)
-        self.assertTrue(res.protocol_id.value == req.protocol_id.value)
-        self.assertTrue(res.unit_id.value == req.unit_id.value)
-        self.assertTrue(res.func_code.value == req.func_code.value)
-        self.assertTrue(res.length.value == 5 and res.data_length == 11)
+        self.assertTrue(res.mbap.transaction_id == req.mbap.transaction_id)
+        self.assertTrue(res.mbap.protocol_id == req.mbap.protocol_id)
+        self.assertTrue(res.mbap.unit_id == req.mbap.unit_id)
+        self.assertTrue(res.mbap.length == 5 and res.data_length == 11)
+        self.assertTrue(res.pdu.func_code == req.pdu.func_code)
 
         # test read failed
         req_data = [0x00, 0x01, 0x00, 0x00, 0x00, 6, 0x01, 0x01, 0x00, 0x00, 0x00, 20]
@@ -35,11 +35,11 @@ class TestModbusTcpData(unittest.TestCase):
         service.process_session(session)
         req = session.request
         res = session.response
-        self.assertTrue(res.transaction_id.value == req.transaction_id.value)
-        self.assertTrue(res.protocol_id.value == req.protocol_id.value)
-        self.assertTrue(res.unit_id.value == req.unit_id.value)
-        self.assertTrue(res.func_code.value == req.func_code.value + 0x80)
-        self.assertTrue(res.length.value == 3 and res.data_length == 9)
+        self.assertTrue(res.mbap.transaction_id == req.mbap.transaction_id)
+        self.assertTrue(res.mbap.protocol_id == req.mbap.protocol_id)
+        self.assertTrue(res.mbap.unit_id == req.mbap.unit_id)
+        self.assertTrue(res.mbap.length == 3 and res.data_length == 9)
+        self.assertTrue(res.pdu.func_code == req.pdu.func_code + 0x80)
         self.assertTrue(res.raw_data[8] == ModbusCode.ILLEGAL_DATA_ADDRESS)
 
     def test_input_bits(self):
@@ -50,11 +50,11 @@ class TestModbusTcpData(unittest.TestCase):
         service.process_session(session)
         req = session.request
         res = session.response
-        self.assertTrue(res.transaction_id.value == req.transaction_id.value)
-        self.assertTrue(res.protocol_id.value == req.protocol_id.value)
-        self.assertTrue(res.unit_id.value == req.unit_id.value)
-        self.assertTrue(res.func_code.value == req.func_code.value)
-        self.assertTrue(res.length.value == 5 and res.data_length == 11)
+        self.assertTrue(res.mbap.transaction_id == req.mbap.transaction_id)
+        self.assertTrue(res.mbap.protocol_id == req.mbap.protocol_id)
+        self.assertTrue(res.mbap.unit_id == req.mbap.unit_id)
+        self.assertTrue(res.mbap.length == 5 and res.data_length == 11)
+        self.assertTrue(res.pdu.func_code == req.pdu.func_code)
 
         # test read failed
         req_data = [0x00, 0x01, 0x00, 0x00, 0x00, 6, 0x01, 0x02, 0x00, 0x00, 0x00, 20]
@@ -62,11 +62,11 @@ class TestModbusTcpData(unittest.TestCase):
         service.process_session(session)
         req = session.request
         res = session.response
-        self.assertTrue(res.transaction_id.value == req.transaction_id.value)
-        self.assertTrue(res.protocol_id.value == req.protocol_id.value)
-        self.assertTrue(res.unit_id.value == req.unit_id.value)
-        self.assertTrue(res.func_code.value == req.func_code.value + 0x80)
-        self.assertTrue(res.length.value == 3 and res.data_length == 9)
+        self.assertTrue(res.mbap.transaction_id == req.mbap.transaction_id)
+        self.assertTrue(res.mbap.protocol_id == req.mbap.protocol_id)
+        self.assertTrue(res.mbap.unit_id == req.mbap.unit_id)
+        self.assertTrue(res.mbap.length == 3 and res.data_length == 9)
+        self.assertTrue(res.pdu.func_code == req.pdu.func_code + 0x80)
         self.assertTrue(res.raw_data[8] == ModbusCode.ILLEGAL_DATA_ADDRESS)
 
     def test_holding_regs(self):
@@ -77,11 +77,11 @@ class TestModbusTcpData(unittest.TestCase):
         service.process_session(session)
         req = session.request
         res = session.response
-        self.assertTrue(res.transaction_id.value == req.transaction_id.value)
-        self.assertTrue(res.protocol_id.value == req.protocol_id.value)
-        self.assertTrue(res.unit_id.value == req.unit_id.value)
-        self.assertTrue(res.func_code.value == req.func_code.value)
-        self.assertTrue(res.length.value == 23 and res.data_length == 29)
+        self.assertTrue(res.mbap.transaction_id == req.mbap.transaction_id)
+        self.assertTrue(res.mbap.protocol_id == req.mbap.protocol_id)
+        self.assertTrue(res.mbap.unit_id == req.mbap.unit_id)
+        self.assertTrue(res.mbap.length == 23 and res.data_length == 29)
+        self.assertTrue(res.pdu.func_code == req.pdu.func_code)
 
         # test read failed
         req_data = [0x00, 0x01, 0x00, 0x00, 0x00, 6, 0x01, 0x03, 0x00, 0x00, 0x00, 20]
@@ -89,11 +89,11 @@ class TestModbusTcpData(unittest.TestCase):
         service.process_session(session)
         req = session.request
         res = session.response
-        self.assertTrue(res.transaction_id.value == req.transaction_id.value)
-        self.assertTrue(res.protocol_id.value == req.protocol_id.value)
-        self.assertTrue(res.unit_id.value == req.unit_id.value)
-        self.assertTrue(res.func_code.value == req.func_code.value + 0x80)
-        self.assertTrue(res.length.value == 3 and res.data_length == 9)
+        self.assertTrue(res.mbap.transaction_id == req.mbap.transaction_id)
+        self.assertTrue(res.mbap.protocol_id == req.mbap.protocol_id)
+        self.assertTrue(res.mbap.unit_id == req.mbap.unit_id)
+        self.assertTrue(res.mbap.length == 3 and res.data_length == 9)
+        self.assertTrue(res.pdu.func_code == req.pdu.func_code + 0x80)
         self.assertTrue(res.raw_data[8] == ModbusCode.ILLEGAL_DATA_ADDRESS)
 
     def test_input_regs(self):
@@ -104,11 +104,11 @@ class TestModbusTcpData(unittest.TestCase):
         service.process_session(session)
         req = session.request
         res = session.response
-        self.assertTrue(res.transaction_id.value == req.transaction_id.value)
-        self.assertTrue(res.protocol_id.value == req.protocol_id.value)
-        self.assertTrue(res.unit_id.value == req.unit_id.value)
-        self.assertTrue(res.func_code.value == req.func_code.value)
-        self.assertTrue(res.length.value == 23 and res.data_length == 29)
+        self.assertTrue(res.mbap.transaction_id == req.mbap.transaction_id)
+        self.assertTrue(res.mbap.protocol_id == req.mbap.protocol_id)
+        self.assertTrue(res.mbap.unit_id == req.mbap.unit_id)
+        self.assertTrue(res.mbap.length == 23 and res.data_length == 29)
+        self.assertTrue(res.pdu.func_code == req.pdu.func_code)
 
         # test read failed
         req_data = [0x00, 0x01, 0x00, 0x00, 0x00, 6, 0x01, 0x04, 0x00, 0x00, 0x00, 20]
@@ -116,11 +116,11 @@ class TestModbusTcpData(unittest.TestCase):
         service.process_session(session)
         req = session.request
         res = session.response
-        self.assertTrue(res.transaction_id.value == req.transaction_id.value)
-        self.assertTrue(res.protocol_id.value == req.protocol_id.value)
-        self.assertTrue(res.unit_id.value == req.unit_id.value)
-        self.assertTrue(res.func_code.value == req.func_code.value + 0x80)
-        self.assertTrue(res.length.value == 3 and res.data_length == 9)
+        self.assertTrue(res.mbap.transaction_id == req.mbap.transaction_id)
+        self.assertTrue(res.mbap.protocol_id == req.mbap.protocol_id)
+        self.assertTrue(res.mbap.unit_id == req.mbap.unit_id)
+        self.assertTrue(res.mbap.length == 3 and res.data_length == 9)
+        self.assertTrue(res.pdu.func_code == req.pdu.func_code + 0x80)
         self.assertTrue(res.raw_data[8] == ModbusCode.ILLEGAL_DATA_ADDRESS)
 
 if __name__ == '__main__':
