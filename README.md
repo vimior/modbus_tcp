@@ -27,6 +27,10 @@ Modbus寄存器数据(`ModbusStructData`)说明
 
   # 测试Modbus TCP数据处理
   python tests/test_modbus_tcp_data.py
+
+  # 单元测试
+  python tests/unittest_modbus_data.py
+  python tests/unittest_modbus_tcp_data.py
   ```
 
 ## 功能支持说明
@@ -88,7 +92,7 @@ Modbus寄存器数据(`ModbusStructData`)说明
   # 指定请求数据
   session.set_request_data(req_data_1)
   # 处理请求数据
-  service.process_session(&session, modbus_data);
+  service.process_session(session);
   print('read input register, req={}'.format(session.get_request_data()))
   print('read input register, res={}'.format(session.get_response_data()))
 
@@ -97,7 +101,7 @@ Modbus寄存器数据(`ModbusStructData`)说明
   # 指定请求数据
   session.set_request_data(req_data_2)
   # 处理请求数据
-  service.process_session(&session, modbus_data);
+  service.process_session(session);
   print('write holding register, req={}'.format(session.get_request_data()))
   print('write holding register, res={}'.format(session.get_response_data()))
 
@@ -106,7 +110,7 @@ Modbus寄存器数据(`ModbusStructData`)说明
   # 指定请求数据
   session.set_request_data(req_data_3)
   # 处理请求数据
-  service.process_session(&session, modbus_data);
+  service.process_session(session)
   print('read holding register, req={}'.format(session.get_request_data()))
   print('read holding register, res={}'.format(session.get_response_data()))
   ```

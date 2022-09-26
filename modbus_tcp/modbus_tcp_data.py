@@ -55,7 +55,7 @@ class _UnsignedShort(__CData):
 
 class _DataFrame(object):
     def __init__(self):
-        self.trans_id = _UnsignedShort(0)
+        self.transaction_id = _UnsignedShort(0)
         self.protocol_id = _UnsignedShort(0x00)
         self.length = _UnsignedShort(2)
         self.unit_id = _UnsignedChar(0x01)
@@ -74,7 +74,7 @@ class _DataFrame(object):
     def set_data(self, data):
         if len(data) < 8:
             raise ModbusException('the length of data must gt 8')
-        self.trans_id.set_data(data[0:2])
+        self.transaction_id.set_data(data[0:2])
         self.protocol_id.set_data(data[2:4])
         self.length.set_data(data[4:6])
         self.unit_id.set_data(data[6])
@@ -88,6 +88,7 @@ class _DataFrame(object):
     def add_pdu_raw_data(self, raw_data):
         self.__pdu_raw_data += raw_data  
         self.__data_length += len(raw_data)
+        self.length.set_value(len(self.__pdu_raw_data) + 1)
 
     def add_pdu_data_list(self, datas, size=1):
         raw_data = struct.pack('>{}{}'.format(len(datas), 'H' if size == 2 else 'B'), *datas)
@@ -105,7 +106,7 @@ class _DataFrame(object):
     @property
     def raw_data(self):
         self.length.set_value(len(self.__pdu_raw_data) + 1)
-        return self.trans_id.raw_data + self.protocol_id.raw_data + self.length.raw_data + self.unit_id.raw_data + self.__pdu_raw_data
+        return self.transaction_id.raw_data + self.protocol_id.raw_data + self.length.raw_data + self.unit_id.raw_data + self.__pdu_raw_data
 
 
 class ModbusDataSession(object):
