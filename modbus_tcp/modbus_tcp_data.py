@@ -62,6 +62,10 @@ class _DataFrame(object):
             self.__unit_id = UnsignedChar(0x00)
         
         @property
+        def data_length(self):
+            return 7
+        
+        @property
         def transaction_id(self):
             return self.__transaction_id.value
         
@@ -76,10 +80,6 @@ class _DataFrame(object):
         @property
         def unit_id(self):
             return self.__unit_id.value
-        
-        @property
-        def data_length(self):
-            return 7
         
         @property
         def raw_data(self):
@@ -109,8 +109,16 @@ class _DataFrame(object):
             self.__raw_data = self.__func_code.raw_data
         
         @property
+        def data_length(self):
+            return len(self.raw_data)
+
+        @property
         def func_code(self):
             return self.__func_code.value
+
+        @property
+        def raw_data(self):
+            return self.__raw_data
         
         def reset(self, func_code):
             self.__func_code.set_data(func_code)
@@ -127,22 +135,39 @@ class _DataFrame(object):
             self.reset(raw_data[0])
             self.__raw_data = raw_data
         
-        def add_pdu_raw_data(self, raw_data):
+        def add_datas(self, datas, size=1, signed=False):
+            if isinstance(datas, bytes):
+                self.__raw_data += datas
+            else:
+                fmt = '>{}{}'.format(len(datas), ('h' if signed else 'H') if size == 2 else  ('b' if signed else 'B'))
+                self.__raw_data += struct.pack(fmt, *datas)
+        
+        def add_raw_data(self, raw_data):
             self.__raw_data += raw_data
         
-        @property
-        def raw_data(self):
-            return self.__raw_data
+        def get_datas(self, start, end, fmt):
+            return struct.unpack(fmt, self.__raw_data[start:end])
         
-        @property
-        def data_length(self):
-            return len(self.raw_data)
+        def get_uint8(self, offset):
+            return self.get_datas(offset, offset + 1, fmt='>B')[0]
         
-        def get_u8(self, inx):
-            return UnsignedChar(self.__raw_data[inx]).value
+        def get_uint16(self, offset):
+            return self.get_datas(offset, offset + 2, fmt='>H')[0]
+        
+        def get_uint32(self, offset):
+            return self.get_datas(offset, offset + 4, fmt='>I')[0]
 
-        def get_u16(self, inx):
-            return UnsignedShort(self.__raw_data[inx:inx+2]).value
+        def get_int8(self, offset):
+            return self.get_datas(offset, offset + 1, fmt='>b')[0]
+
+        def get_int16(self, offset):
+            return self.get_datas(offset, offset + 2, fmt='>h')[0]
+
+        def get_int32(self, offset):
+            return self.get_datas(offset, offset + 4, fmt='>i')[0]
+        
+        def get_fp32(self, offset):
+            return self.get_datas(offset, offset + 4, fmt='>f')[0]
 
     def __init__(self):
         self.mbap = self.MBAP()
@@ -163,16 +188,9 @@ class _DataFrame(object):
         self.pdu.set_raw_data(data[7:])
         self.mbap.set_length(self.pdu.data_length + 1)
     
-    def add_pdu_raw_data(self, raw_data):
-        self.pdu.add_pdu_raw_data(raw_data)
+    def add_datas(self, datas, size=1, signed=False):
+        self.pdu.add_datas(datas, size=size, signed=signed)
         self.mbap.set_length(self.pdu.data_length + 1)
-
-    def add_pdu_data_list(self, datas, size=1, unsigned=True):
-        if unsigned:
-            raw_data = struct.pack('>{}{}'.format(len(datas), 'H' if size == 2 else 'B'), *datas)
-        else:
-            raw_data = struct.pack('>{}{}'.format(len(datas), 'h' if size == 2 else 'b'), *datas)
-        self.add_pdu_raw_data(raw_data)
 
     def set_code(self, code):
         if code == ModbusCode.SUCCESS:
@@ -295,8 +313,8 @@ class ModbusDataService(object):
     def __read_bits(self, session : ModbusDataSession):
         if session.request.data_length < 12:
             return ModbusCode.ILLEGAL_DATA_VALUE
-        start_addr = session.request.pdu.get_u16(1)
-        quantity = session.request.pdu.get_u16(3)
+        start_addr = session.request.pdu.get_uint16(1)
+        quantity = session.request.pdu.get_uint16(3)
         code = ModbusCode.ILLEGAL_DATA_VALUE
         if 0x0001 <= quantity <= 0x07D0:
             if session.request.pdu.func_code == ModbusFunCode.FC_READ_COILS:
@@ -309,15 +327,15 @@ class ModbusDataService(object):
                 for i in range(quantity):
                     if bits[i]:
                         data[i // 8] = data[i // 8] | (1 << (i % 8))
-                session.response.add_pdu_data_list([byte_size], size=1)
-                session.response.add_pdu_data_list(data, size=1)
+                session.response.add_datas([byte_size], size=1)
+                session.response.add_datas(data, size=1)
         return code
 
     def __read_registers(self, session : ModbusDataSession):
         if session.request.data_length < 12:
             return ModbusCode.ILLEGAL_DATA_VALUE
-        start_addr = session.request.pdu.get_u16(1)
-        quantity = session.request.pdu.get_u16(3)
+        start_addr = session.request.pdu.get_uint16(1)
+        quantity = session.request.pdu.get_uint16(3)
         code = ModbusCode.ILLEGAL_DATA_VALUE
         if 0x0001 <= quantity <= 0x007D:
             if session.request.pdu.func_code == ModbusFunCode.FC_READ_HOLDING_REGS:
@@ -326,38 +344,38 @@ class ModbusDataService(object):
                 code, regs = self.__modbus_data.read_input_registers(start_addr, quantity)
             if code == ModbusCode.SUCCESS:
                 byte_size = quantity * 2
-                session.response.add_pdu_data_list([byte_size], size=1)
-                session.response.add_pdu_data_list(regs, size=2)
+                session.response.add_datas([byte_size], size=1)
+                session.response.add_datas(regs, size=2)
         return code
 
     def __write_single_coil_bit(self, session : ModbusDataSession):
         if session.request.data_length < 12:
             return ModbusCode.ILLEGAL_DATA_VALUE
-        bit_addr = session.request.pdu.get_u16(1)
-        bit_val = session.request.pdu.get_u16(3)
+        bit_addr = session.request.pdu.get_uint16(1)
+        bit_val = session.request.pdu.get_uint16(3)
         code = ModbusCode.ILLEGAL_DATA_VALUE
         if bit_val == 0x0000 or bit_val == 0xFF00:
             code = self.__modbus_data.write_coil_bits(bit_addr, [1 if bit_val == 0xFF00 else 0])
             if code == ModbusCode.SUCCESS:
-                session.response.add_pdu_raw_data(session.request.pdu.raw_data[1:5])
+                session.response.add_datas(session.request.pdu.raw_data[1:5])
         return code
 
     def __write_single_holding_register(self, session : ModbusDataSession):
         if session.request.data_length < 12:
             return ModbusCode.ILLEGAL_DATA_VALUE
-        reg_addr = session.request.pdu.get_u16(1)
-        reg_val = session.request.pdu.get_u16(3)
+        reg_addr = session.request.pdu.get_uint16(1)
+        reg_val = session.request.pdu.get_uint16(3)
         code = self.__modbus_data.write_holding_registers(reg_addr, [reg_val])
         if code == ModbusCode.SUCCESS:
-            session.response.add_pdu_raw_data(session.request.pdu.raw_data[1:5])
+            session.response.add_datas(session.request.pdu.raw_data[1:5])
         return code
 
     def __write_multiple_coil_bits(self, session : ModbusDataSession):
         if session.request.data_length < 13:
             return ModbusCode.ILLEGAL_DATA_VALUE
-        start_addr = session.request.pdu.get_u16(1)
-        quantity = session.request.pdu.get_u16(3)
-        byte_count = session.request.pdu.get_u8(5)
+        start_addr = session.request.pdu.get_uint16(1)
+        quantity = session.request.pdu.get_uint16(3)
+        byte_count = session.request.pdu.get_uint8(5)
         quantity_ok = 0x0001 <= quantity <= 0x07B0
         byte_count_ok = byte_count >= (quantity + 7) // 8
         pdu_len_ok = (session.request.data_length - 7 - 6) >= byte_count
@@ -365,19 +383,19 @@ class ModbusDataService(object):
         if quantity_ok and byte_count_ok and pdu_len_ok:
             bits = [0] * quantity
             for i in range(quantity):
-                bit_val = session.request.pdu.get_u8(i // 8 + 6)
+                bit_val = session.request.pdu.get_uint8(i // 8 + 6)
                 bits[i] = (bool)(bit_val & (1 << (i % 8)))
             code = self.__modbus_data.write_coil_bits(start_addr, bits)
             if code == ModbusCode.SUCCESS:
-                session.response.add_pdu_raw_data(session.request.pdu.raw_data[1:5])
+                session.response.add_datas(session.request.pdu.raw_data[1:5])
         return code
         
     def __write_multiple_holding_registers(self, session : ModbusDataSession):
         if session.request.data_length < 13:
             return ModbusCode.ILLEGAL_DATA_VALUE
-        start_addr = session.request.pdu.get_u16(1)
-        quantity = session.request.pdu.get_u16(3)
-        byte_count = session.request.pdu.get_u8(5)
+        start_addr = session.request.pdu.get_uint16(1)
+        quantity = session.request.pdu.get_uint16(3)
+        byte_count = session.request.pdu.get_uint8(5)
         quantity_ok = 0x0001 <= quantity <= 0x007B
         byte_count_ok = byte_count == quantity * 2
         pdu_len_ok = (session.request.data_length - 7 - 6) >= byte_count
@@ -385,31 +403,31 @@ class ModbusDataService(object):
         if quantity_ok and byte_count_ok and pdu_len_ok:
             regs = [0] * quantity
             for i in range(quantity):
-                regs[i] = session.request.pdu.get_u16(i * 2 + 6)
+                regs[i] = session.request.pdu.get_uint16(i * 2 + 6)
             code = self.__modbus_data.write_holding_registers(start_addr, regs)
             if code == ModbusCode.SUCCESS:
-                session.response.add_pdu_raw_data(session.request.pdu.raw_data[1:5])
+                session.response.add_datas(session.request.pdu.raw_data[1:5])
         return code
 
     def __mask_write_holding_register(self, session : ModbusDataSession):
         if session.request.data_length < 14:
             return ModbusCode.ILLEGAL_DATA_VALUE
-        ref_addr = session.request.pdu.get_u16(1)
-        and_mask = session.request.pdu.get_u16(3)
-        or_mask = session.request.pdu.get_u16(5)
+        ref_addr = session.request.pdu.get_uint16(1)
+        and_mask = session.request.pdu.get_uint16(3)
+        or_mask = session.request.pdu.get_uint16(5)
         code = self.__modbus_data.mask_write_holding_register(ref_addr, and_mask, or_mask)
         if code == ModbusCode.SUCCESS:
-            session.response.add_pdu_raw_data(session.request.pdu.raw_data[1:7])
+            session.response.add_datas(session.request.pdu.raw_data[1:7])
         return code
 
     def __write_and_read_multiple_holding_registers(self, session : ModbusDataSession):
         if session.request.data_length < 17:
             return ModbusCode.ILLEGAL_DATA_VALUE
-        r_start_addr = session.request.pdu.get_u16(1)
-        r_quantity = session.request.pdu.get_u16(3)
-        w_start_addr = session.request.pdu.get_u16(5)
-        w_quantity = session.request.pdu.get_u16(7)
-        byte_count = session.request.pdu.get_u8(9)
+        r_start_addr = session.request.pdu.get_uint16(1)
+        r_quantity = session.request.pdu.get_uint16(3)
+        w_start_addr = session.request.pdu.get_uint16(5)
+        w_quantity = session.request.pdu.get_uint16(7)
+        byte_count = session.request.pdu.get_uint8(9)
         r_quantity_ok = 0x0001 <= r_quantity <= 0x007D
         w_quantity_ok = 0x0001 <= w_quantity <= 0x0079
         byte_count_ok = byte_count == w_quantity * 2
@@ -418,10 +436,10 @@ class ModbusDataService(object):
         if r_quantity_ok and w_quantity_ok and byte_count_ok and pdu_len_ok:
             w_regs = [0] * w_quantity
             for i in range(w_quantity):
-                w_regs[i] = session.request.pdu.get_u16(i * 2 + 10)
+                w_regs[i] = session.request.pdu.get_uint16(i * 2 + 10)
             code, r_regs = self.__modbus_data.write_and_read_holding_registers(w_start_addr, w_regs, r_start_addr, r_quantity)
             if code == ModbusCode.SUCCESS:
                 byte_size = r_quantity * 2
-                session.response.add_pdu_data_list([byte_size], size=1)
-                session.response.add_pdu_data_list(r_regs, size=2)
+                session.response.add_datas([byte_size], size=1)
+                session.response.add_datas(r_regs, size=2)
         return code
