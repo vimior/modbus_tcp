@@ -13,7 +13,7 @@ from  modbus_tcp import ModbusTcpClient
 
 
 if __name__ == '__main__':
-    client = ModbusTcpClient('192.168.1.140')
+    client = ModbusTcpClient('127.0.0.1')
     print(client.read_coil_bits(0x00, 16))
     print(client.read_input_bits(0x00, 16))
     print(client.read_holding_registers(0x20, 2))
