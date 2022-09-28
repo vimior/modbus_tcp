@@ -72,7 +72,7 @@ class ModbusTcpClient(object):
                     self.session.response.pdu.func_code
                 ))
                 continue
-            return 0 if self.session.response.pdu.func_code == self.session.request.pdu.func_code else self.session.response.pdu.get_int8(1)
+            return 0 if self.session.response.pdu.func_code == self.session.request.pdu.func_code else self.session.response.pdu.get_int8s(1)[0]
         return -3  # TIMEOUT
     
     def __request(self, unit_id=None):
@@ -105,7 +105,7 @@ class ModbusTcpClient(object):
         if code != 0:
             return code, list(self.session.response.raw_data)
         else:
-            return code, self.session.response.pdu.get_int16(2, count=quantity, signed=signed)
+            return code, self.session.response.pdu.get_int16s(2, count=quantity, signed=signed)
 
     def read_input_registers(self, addr, quantity, signed=False):
         self.session.request.reset(0x04)
@@ -114,7 +114,7 @@ class ModbusTcpClient(object):
         if code != 0:
             return code, list(self.session.response.raw_data)
         else:
-            return code, self.session.response.pdu.get_int16(2, count=quantity, signed=signed)
+            return code, self.session.response.pdu.get_int16s(2, count=quantity, signed=signed)
 
     def write_single_coil_bit(self, addr, on):
         self.session.request.reset(0x05)
@@ -159,4 +159,4 @@ class ModbusTcpClient(object):
         if code != 0:
             return code, list(self.session.response.raw_data)
         else:
-            return code, self.session.response.pdu.get_int16(2, count=r_quantity, signed=r_signed)
+            return code, self.session.response.pdu.get_int16s(2, count=r_quantity, signed=r_signed)
