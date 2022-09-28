@@ -7,9 +7,11 @@
 # Author: Vinman <vinman.cub@gmail.com>
 
 import struct
+import logging
 from .modbus_code import ModbusCode, ModbusFunCode
 from .modbus_data import ModbusData
 from .modbus_exception import ModbusException
+from .log import logger as default_logger
 
 
 class __CData(object):
@@ -289,10 +291,11 @@ class ModbusDataSession(object):
 
 
 class ModbusDataService(object):
-    def __init__(self, modbus_data : ModbusData):
+    def __init__(self, modbus_data, logger=None):
         self.__modbus_data = modbus_data
         self.__data_buf = b''
         self.__session = None
+        self.logger = logger if logger and isinstance(logger, logging.Logger) else default_logger
     
     def process_data(self, data, callback=None, is_checked=False):
         if self.__session is None:
@@ -327,7 +330,7 @@ class ModbusDataService(object):
             data_len = _UnsignedShort(self.__data_buf[4:6]).value
             if data_len > 254:
                 # Modbus TCP一帧数据最多260字节
-                print('Modbus tcp data length is wrong, discard this part of data and clear the buffer, len={}'.format(data_len))
+                self.logger.warning('Modbus tcp data length is wrong, discard this part of data and clear the buffer, len={}'.format(data_len))
                 self.__data_buf = b''
                 return
             if buf_len + remain < data_len + 6:
@@ -352,7 +355,7 @@ class ModbusDataService(object):
             if remain == 0:
                 return 
     
-    def process_session(self, session : ModbusDataSession):
+    def process_session(self, session):
         session.response.set_datas(session.request.raw_data[:8])
         length = session.request.mbap.length + 6
         if session.request.data_length < 8 or length > 260 or session.request.data_length < length:
@@ -379,7 +382,7 @@ class ModbusDataService(object):
             code = self.__write_and_read_multiple_holding_registers(session)
         session.response.set_code(code)
 
-    def __read_bits(self, session : ModbusDataSession):
+    def __read_bits(self, session):
         if session.request.data_length < 12:
             return ModbusCode.ILLEGAL_DATA_VALUE
         start_addr, quantity = session.request.pdu.get_int16s(1, count=2)
@@ -399,7 +402,7 @@ class ModbusDataService(object):
                 session.response.add_datas(data, size=1)
         return code
 
-    def __read_registers(self, session : ModbusDataSession):
+    def __read_registers(self, session):
         if session.request.data_length < 12:
             return ModbusCode.ILLEGAL_DATA_VALUE
         start_addr, quantity = session.request.pdu.get_int16s(1, count=2)
@@ -415,7 +418,7 @@ class ModbusDataService(object):
                 session.response.add_datas(regs, size=2)
         return code
 
-    def __write_single_coil_bit(self, session : ModbusDataSession):
+    def __write_single_coil_bit(self, session):
         if session.request.data_length < 12:
             return ModbusCode.ILLEGAL_DATA_VALUE
         bit_addr, bit_val = session.request.pdu.get_int16s(1, count=2)
@@ -426,7 +429,7 @@ class ModbusDataService(object):
                 session.response.add_datas(session.request.pdu.raw_data[1:5])
         return code
 
-    def __write_single_holding_register(self, session : ModbusDataSession):
+    def __write_single_holding_register(self, session):
         if session.request.data_length < 12:
             return ModbusCode.ILLEGAL_DATA_VALUE
         reg_addr, reg_val = session.request.pdu.get_int16s(1, count=2)
@@ -435,7 +438,7 @@ class ModbusDataService(object):
             session.response.add_datas(session.request.pdu.raw_data[1:5])
         return code
 
-    def __write_multiple_coil_bits(self, session : ModbusDataSession):
+    def __write_multiple_coil_bits(self, session):
         if session.request.data_length < 13:
             return ModbusCode.ILLEGAL_DATA_VALUE
         start_addr, quantity = session.request.pdu.get_int16s(1, count=2)
@@ -454,7 +457,7 @@ class ModbusDataService(object):
                 session.response.add_datas(session.request.pdu.raw_data[1:5])
         return code
         
-    def __write_multiple_holding_registers(self, session : ModbusDataSession):
+    def __write_multiple_holding_registers(self, session):
         if session.request.data_length < 13:
             return ModbusCode.ILLEGAL_DATA_VALUE
         start_addr, quantity = session.request.pdu.get_int16s(1, count=2)
@@ -470,7 +473,7 @@ class ModbusDataService(object):
                 session.response.add_datas(session.request.pdu.raw_data[1:5])
         return code
 
-    def __mask_write_holding_register(self, session : ModbusDataSession):
+    def __mask_write_holding_register(self, session):
         if session.request.data_length < 14:
             return ModbusCode.ILLEGAL_DATA_VALUE
         ref_addr, and_mask, or_mask = session.request.pdu.get_int16s(1, count=3)
@@ -479,7 +482,7 @@ class ModbusDataService(object):
             session.response.add_datas(session.request.pdu.raw_data[1:7])
         return code
 
-    def __write_and_read_multiple_holding_registers(self, session : ModbusDataSession):
+    def __write_and_read_multiple_holding_registers(self, session):
         if session.request.data_length < 17:
             return ModbusCode.ILLEGAL_DATA_VALUE
         r_start_addr, r_quantity, w_start_addr, w_quantity = session.request.pdu.get_int16s(1, count=4)
